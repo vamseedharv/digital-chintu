@@ -1,0 +1,65 @@
+# --- Python (backend/) ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+.venv/
+venv/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+*.db
+*.sqlite3
+
+# --- Node / TypeScript (frontend-dashboard/, frontend-mobile/) ---
+node_modules/
+dist/
+dist-ssr/
+build/
+.vite/
+coverage/
+*.tsbuildinfo
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# --- Playwright (tests/) ---
+tests/test-results/
+tests/playwright-report/
+tests/blob-report/
+tests/.cache/
+
+# --- Env files (never commit real secrets/config) ---
+.env
+.env.*
+!.env.example
+
+# --- Logs & runtime data ---
+*.log
+logs/
+data/
+
+# --- Docker ---
+docker/**/*.local.yml
+
+# --- Local override files (any tool's convention) ---
+*.local
+
+# --- OS ---
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- Editors ---
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.sw?
+*.suo
+*.ntvs*
+*.njsproj
+*.sln

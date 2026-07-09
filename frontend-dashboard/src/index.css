@@ -1,0 +1,9 @@
+@import 'tailwindcss';
+
+/* Class-based dark mode: toggled by ThemeProvider adding/removing `.dark`
+   on <html>, instead of only following prefers-color-scheme. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+body {
+  @apply bg-slate-50 text-slate-900 dark:bg-slate-900 dark:text-slate-100;
+}

@@ -1,0 +1,48 @@
+x-healthcheck-defaults: &healthcheck-defaults
+  interval: 30s
+  timeout: 5s
+  retries: 3
+  start_period: 5s
+
+services:
+  backend:
+    build:
+      context: ./backend
+    image: digital-chintu-backend:local
+    environment:
+      APP_NAME: ${APP_NAME:-Chintu}
+      APP_ENV: ${APP_ENV:-production}
+      DEBUG: ${DEBUG:-false}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      LOG_DIR: /app/logs
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173}
+      DATABASE_URL: sqlite:////app/data/chintu.db
+    volumes:
+      - backend-data:/app/data
+      - backend-logs:/app/logs
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    restart: unless-stopped
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health')"]
+
+  frontend-dashboard:
+    build:
+      context: ./frontend-dashboard
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8000}
+    image: digital-chintu-frontend-dashboard:local
+    ports:
+      - "${FRONTEND_PORT:-5173}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost/"]
+
+volumes:
+  backend-data:
+  backend-logs:

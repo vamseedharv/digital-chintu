@@ -4,9 +4,24 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository state
 
-This repository currently contains **only planning/specification documents** — there is no source code yet (no backend, frontend, or tests have been created). Everything under `docs/` is a design specification meant to drive future implementation with Claude Code. Do not assume any build/lint/test tooling exists — check for `backend/`, `frontend-dashboard/`, `frontend-mobile/`, etc. before assuming they've been created, and set up tooling (per the stack below) the first time you actually scaffold code.
+**Project Setup is complete** (see [docs/features/001_Project_Setup.md](docs/features/001_Project_Setup.md)): the monorepo scaffolding, backend skeleton, frontend skeleton, Docker, CI, and dev tooling all exist and are verified working. No feature work (reminders, voice, AI routing, plugins, media integrations, etc.) has started — `backend/app/domain`, `backend/app/services`, and `backend/app/repositories` are intentionally empty packages, and `frontend-mobile/`, `shared/`, `plugins/` are placeholder directories only. Everything under `docs/` remains the design specification driving that future work.
 
-Because there is no code, there are no build/lint/test commands to document yet. Once implementation starts, update this file with the real commands (e.g. `pytest` invocation, `npm run` scripts) instead of guessing at them.
+## Commands
+
+```bash
+make setup         # bootstrap backend venv + install all dependencies (or scripts/setup.sh, scripts/setup.ps1)
+make backend-dev   # run FastAPI backend with reload, http://localhost:8000
+make frontend-dev  # run Vite dev server, http://localhost:5173
+make lint          # Ruff + mypy (backend), ESLint + tsc (frontend)
+make format        # Black (backend), Prettier (frontend)
+make test          # Pytest (backend), Vitest (frontend)
+make docker-up     # docker compose up --build
+make docker-down   # docker compose down
+```
+
+Without `make` (native Windows without Git Bash/WSL), run the underlying commands directly from `backend/README.md` and `frontend-dashboard/README.md`. Full setup walkthrough: `docs/guides/Setup_Guide.md`. Day-to-day conventions (where new code goes, testing patterns): `docs/guides/Developer_Guide.md`.
+
+Both backend and frontend test suites are split into `unit/` and `integration/` (see `docs/architecture/08_TESTING_STRATEGY.md`). End-to-end tests (Playwright, spans both services) live in `tests/` — see `tests/README.md`; not wired into CI. A single test: `pytest tests/unit/test_config.py::test_defaults_are_safe_for_an_unconfigured_deployment` (backend, from `backend/`) or `npx playwright test e2e/smoke.spec.ts -g "dashboard loads"` (E2E, from `tests/`).
 
 ## What Digital Chintu is
 
@@ -19,44 +34,44 @@ Digital Chintu is a planned **open-source, self-hosted AI home assistant platfor
 - Offline-first where practical
 - Must run on Raspberry Pi, Linux, Windows, and Docker
 
-## Planned architecture
+## Architecture
 
-From [docs/Foundation/02_System_Architecture.md](docs/Foundation/02_System_Architecture.md):
-- Core Backend: FastAPI, using Clean Architecture with Service Layer + Repository Layer
-- Plugin Engine (loads plugins like Home Assistant, custom plugins)
-- Database: SQLite via SQLAlchemy
-- REST + WebSocket API for real-time updates
-- React Dashboard (web client)
-- Android client, future iOS client
-- Voice pipeline: OpenWakeWord (wake word) → Whisper.cpp (STT) → Piper (TTS)
+From [docs/Foundation/02_System_Architecture.md](docs/Foundation/02_System_Architecture.md); scaffolded so far vs. still planned:
+- Core Backend: FastAPI, Clean Architecture with Service Layer + Repository Layer — **scaffolded** (`backend/app/{api,core,domain,services,repositories,db}`), layers currently empty pending feature work
+- Database: SQLite via SQLAlchemy — **scaffolded** (engine/session in `backend/app/db`), no models yet
+- React Dashboard (web client) — **scaffolded** (`frontend-dashboard/`)
+- REST API — **scaffolded** (`/api/v1/health`); WebSocket API — planned, not yet added
+- Plugin Engine (Home Assistant, custom plugins) — planned, `plugins/` is a placeholder
+- Android client, future iOS client — planned, `frontend-mobile/` is a placeholder (framework not yet chosen)
+- Voice pipeline: OpenWakeWord (wake word) → Whisper.cpp (STT) → Piper (TTS) — planned, not started
 
-## Planned tech stack
+## Tech stack
 
-(From [docs/Foundation/04_Tech_Stack.md](docs/Foundation/04_Tech_Stack.md))
+(From [docs/Foundation/04_Tech_Stack.md](docs/Foundation/04_Tech_Stack.md); ✅ = in use today)
 
 | Area | Choices |
 |---|---|
-| Backend | Python, FastAPI, SQLAlchemy, SQLite, APScheduler |
-| Frontend | React, TypeScript, Vite, TailwindCSS, Framer Motion |
-| Voice | OpenWakeWord, Whisper.cpp, Piper |
-| Testing | Pytest (backend), Vitest (frontend unit), Playwright (E2E) |
-| Python lint/format | Ruff, Black, type hints required |
-| TypeScript lint/format | ESLint, Prettier, strict mode |
+| Backend | ✅ Python 3.12, FastAPI, SQLAlchemy, SQLite · APScheduler planned |
+| Frontend | ✅ React 19, TypeScript, Vite, Tailwind CSS v4, Framer Motion |
+| Voice | OpenWakeWord, Whisper.cpp, Piper — not started |
+| Testing | ✅ Pytest (backend, unit+integration), Vitest (frontend, unit+integration), Playwright (E2E, `tests/`) |
+| Python lint/format | ✅ Ruff, Black, mypy (strict), type hints required |
+| TypeScript lint/format | ✅ ESLint (flat config), Prettier, strict mode |
 
-## Planned repository layout
+## Repository layout
 
-(From [docs/Foundation/03_Repository_Structure.md](docs/Foundation/03_Repository_Structure.md)) — this is a monorepo target, not yet created:
+(From [docs/Foundation/03_Repository_Structure.md](docs/Foundation/03_Repository_Structure.md)) — monorepo, now scaffolded:
 
 ```
-backend/            FastAPI backend
-frontend-dashboard/ React web dashboard
-frontend-mobile/    Android (and future iOS) client
-shared/             Shared types/utilities across clients
-plugins/            Plugin implementations (Home Assistant, custom, etc.)
+backend/            FastAPI backend (Clean Architecture skeleton, see backend/README.md)
+frontend-dashboard/ React + TypeScript + Vite + Tailwind dashboard (see frontend-dashboard/README.md)
+frontend-mobile/    Placeholder — Android/iOS framework not yet chosen (frontend-mobile/README.md)
+shared/             Placeholder — shared client code, populated once an API surface exists
+plugins/            Placeholder — plugin engine/implementations, not started
 docs/               Specifications (this folder)
-docker/             Docker/deployment config
-scripts/            Dev/ops scripts
-tests/              Cross-cutting test suites
+docker/             Docker documentation (Dockerfiles live per-service; docker-compose.yml at repo root)
+scripts/            Cross-platform dev bootstrap scripts (setup.sh, setup.ps1)
+tests/              Cross-cutting Playwright E2E suite
 ```
 
 ## Documentation structure — how to navigate `docs/`
@@ -65,8 +80,9 @@ The docs are organized in layers with different levels of detail; when implement
 
 - **`docs/Foundation/`** — the initial foundation pack (numbered 00–10). This is the most concrete/authoritative source for architecture, tech stack, repo layout, and coding standards *before any feature work begins*. Per [10_Master_Claude_Prompt.md](docs/Foundation/10_Master_Claude_Prompt.md), foundation work should be completed (backend/frontend skeleton, Docker, CI/CD) before any feature implementation starts.
 - **`docs/SDS/`** — the Software Design Specification, organized by domain area (`00_Platform`, `01_UI`, `02_Backend`, `03_Voice`, `04_Productivity`, `05_Media`, `06_AI`, `07_Clients`, `08_Plugins`, `09_Operations`). Each doc is currently a template stub following a fixed 15-section outline (Context, User Stories, Functional/Non-functional Requirements, UX Flow, UI Components, Backend Design, Database, APIs, WebSocket Events, Configuration, Test Plan, Manual QA, Claude Code Prompt, Definition of Done) — sections are largely unfilled placeholders (`(TODO)`) and need to be fleshed out with real requirements before/while a given feature is implemented.
-- **`docs/features/`** — numbered, sequential feature specs (001 through 050) intended to be implemented roughly in order, each building on the previous ones without breaking them. Also currently template stubs with recurring constraints: must run on Raspberry Pi/Linux/Windows/Docker, support dark and light themes, require no paid services, and be independently testable.
-- **`docs/architecture/`** and **`docs/guides/`** — currently one-line placeholder stubs for architecture deep-dives (system architecture, DB design, API guidelines, plugin SDK, security, deployment, testing strategy, UI design system) and contributor guides (coding standards, git workflow, release process). Treat these as TODO — fill them in as the corresponding real decisions get made, don't invent content that contradicts the Foundation pack.
+- **`docs/features/`** — numbered, sequential feature specs (001 through 050) intended to be implemented roughly in order, each building on the previous ones without breaking them. Recurring constraints: must run on Raspberry Pi/Linux/Windows/Docker, support dark and light themes, require no paid services, and be independently testable. `001_Project_Setup.md` is filled in and done; 002 onward are still template stubs.
+- **`docs/architecture/`** — filled in for what's actually implemented: `01_SYSTEM_ARCHITECTURE`, `02_REPOSITORY_STRUCTURE`, `04_API_GUIDELINES`, `06_SECURITY`, `07_DEPLOYMENT`, `08_TESTING_STRATEGY`, `09_UI_DESIGN_SYSTEM` all describe real, current behavior (each also lists what's still a gap). `03_DATABASE_DESIGN` and `05_PLUGIN_SDK` are still one-line stubs — nothing to document until models/plugins exist.
+- **`docs/guides/`** — `Setup_Guide.md`, `Developer_Guide.md`, and `Coding_Standards.md` are filled in and real. `Git_Workflow.md`, `Prompt_Usage.md`, and `Release_Process.md` are still stubs — nothing has been decided for those yet; don't invent a policy in them.
 
 ## Recurring constraints across specs
 
