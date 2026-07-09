@@ -70,8 +70,8 @@ section; not dated commitments.
   still one-line stubs — fill in when there's a real process to document.
 - [ ] `docs/architecture/03_DATABASE_DESIGN.md` and `05_PLUGIN_SDK.md` are
   still one-line stubs — nothing to document until models/plugins exist.
-- [ ] No `CONTRIBUTING.md` or `CODEOWNERS` — low priority until there's more
-  than one regular contributor.
+- [ ] No `CODEOWNERS` — low priority until there's more than one regular
+  contributor. (`CONTRIBUTING.md` now exists at the repo root.)
 - [ ] `docs/MASTER_EXECUTION_PLAN.md` has been referenced by name in prior
   requests but does not exist in this repo — confirm whether it was meant
   to be committed, or stop referencing it.

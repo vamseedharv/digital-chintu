@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+Nothing yet — `010_Plugin_Framework` is next (see [ROADMAP.md](ROADMAP.md)).
+
+## [0.2.0] - 2026-07-09
+
+**Foundation frozen.** UI Framework built, then reviewed twice (a UI-specific
+pass and a full architecture review) and every approved, non-feature finding
+from both fixed in the same release. No product feature (reminders, voice,
+AI, plugins, media) has started — see [PROJECT_STATUS.md](PROJECT_STATUS.md)
+and [REPO_HEALTH_REPORT.md](REPO_HEALTH_REPORT.md) for the frozen snapshot.
+
 ### Added
 
 - UI Framework (`frontend-dashboard/`): application shell (`app/AppShell.tsx`)

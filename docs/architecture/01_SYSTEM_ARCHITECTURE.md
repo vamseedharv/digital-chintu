@@ -59,10 +59,27 @@ manager) together, and is the single entrypoint (`uvicorn app.main:app`).
   persisted to `localStorage`, defaults to OS `prefers-color-scheme`.
 - `api/` — `client.ts` (fetch wrapper + `ApiError`), `health.ts` (typed call),
   `useHealth.ts` (hook: loading/success/error state machine).
-- `components/` — presentational components (`HealthStatus`, `ThemeToggle`)
-  that receive state via props/context rather than fetching themselves.
-- `App.tsx` — composes the above; the header name and document title are
-  driven by the backend's `app_name` (fetched via `useHealth`), not hardcoded.
+- `components/ui/` — presentational primitives (`Button`, `LinkButton`,
+  `Card`, `Spinner`, `Skeleton`, `EmptyState`, `Heading`, `Text`) that take
+  state via props rather than fetching themselves.
+- `components/layout/` — `Sidebar` (desktop nav), `MobileNav` (drawer nav,
+  focus-trapped), `NavLinks` (shared by both so they can't drift out of
+  sync), `PageContainer`.
+- `components/` (top level) — feature components composed from the above
+  primitives, e.g. `HealthStatus`, `ThemeToggle`.
+- `app/` — the composition root: `AppShell.tsx` (sidebar/drawer layout,
+  skip-to-content link, header), `router.tsx` (`react-router` route table),
+  `navigation.ts` (nav item list, consumed by `NavLinks`).
+- `routes/` — page components rendered by the router: `HomePage`,
+  `NotFoundPage` (404), `ErrorPage` (route-level error boundary).
+- `main.tsx` — mounts `RouterProvider` wrapped in `ThemeProvider` and
+  `<MotionConfig reducedMotion="user">`; the header name and document title
+  are driven by the backend's `app_name` (fetched via `useHealth` inside
+  `AppShell`), not hardcoded.
+
+The frontend's own import direction (`app`/`routes` → `components/layout` →
+`components/ui` → `api`/`theme`) is enforced the same way the backend's is —
+see "Known gaps" below.
 
 ## Configuration flow
 

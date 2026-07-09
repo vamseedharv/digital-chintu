@@ -4,11 +4,15 @@ Digital Chintu is an open-source, self-hosted AI Home Platform — a configurabl
 home assistant with a web dashboard, mobile client, and (later) voice, plugin,
 and automation features. No paid subscriptions are required to run it.
 
-**The foundation is stable (`v0.1.0`)**: the monorepo scaffolding, backend
-and frontend skeletons, Docker, CI, and dev tooling all exist, are tested,
-and have passed an architecture review. **No product feature has been built
-yet** — no reminders, voice, AI routing, plugins, or media integrations. See
-[PROJECT_STATUS.md](PROJECT_STATUS.md) for the current snapshot,
+**The foundation is frozen (`v0.2.0`)**: the monorepo scaffolding, backend
+and frontend skeletons (including a full application shell, routing, and a
+small reusable component library), Docker, CI, and dev tooling all exist,
+are tested, and have passed two review passes (UI-specific, then full
+architecture) with every approved, non-feature finding fixed. **No product
+feature has been built yet** — no reminders, voice, AI routing, plugins, or
+media integrations. See [PROJECT_STATUS.md](PROJECT_STATUS.md) for the
+current snapshot, [REPO_HEALTH_REPORT.md](REPO_HEALTH_REPORT.md) for a
+verified build/lint/test health check of this exact snapshot,
 [ROADMAP.md](ROADMAP.md) for what's next, [BACKLOG.md](BACKLOG.md) for
 granular open items, and [CLAUDE.md](CLAUDE.md) for repository-wide
 guidance.
@@ -106,12 +110,21 @@ for the full strategy.
 CI (`.github/workflows/ci.yml`) runs the backend suite on Linux and Windows, and
 the frontend suite on Linux, on every push and pull request to `main`.
 
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the contribution workflow and
+[DEVELOPMENT.md](DEVELOPMENT.md) for the local dev quickstart (deeper
+day-to-day conventions live in [docs/guides/](docs/guides)).
+
 ## Documentation
 
 - [PROJECT_STATUS.md](PROJECT_STATUS.md) — current snapshot: what exists, test coverage, platform verification, known limitations.
+- [REPO_HEALTH_REPORT.md](REPO_HEALTH_REPORT.md) — verified build/lint/test health check of the frozen foundation.
 - [ROADMAP.md](ROADMAP.md) — strategic phase-level sequencing of `docs/features/001`–`050`.
 - [BACKLOG.md](BACKLOG.md) — granular open items and deferred cleanups.
 - [DEPENDENCY_GRAPH.md](DEPENDENCY_GRAPH.md) — internal module graph (enforced by `import-linter`) and external package dependencies.
+- [CONTRIBUTING.md](CONTRIBUTING.md) — how to propose a change.
+- [DEVELOPMENT.md](DEVELOPMENT.md) — local dev quickstart.
 - [CLAUDE.md](CLAUDE.md) — guidance for AI-assisted development in this repository.
 - [docs/guides/Setup_Guide.md](docs/guides/Setup_Guide.md) — step-by-step local setup and troubleshooting.
 - [docs/guides/Developer_Guide.md](docs/guides/Developer_Guide.md) — day-to-day conventions: where new code goes, testing patterns, config.

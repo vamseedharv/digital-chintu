@@ -22,6 +22,9 @@ summarizes what's actually configured there rather than repeating it.
 - **ESLint** (flat config, `eslint.config.js`): `@eslint/js` recommended +
   `typescript-eslint` recommended + `eslint-plugin-react-hooks` recommended +
   `eslint-plugin-react-refresh` (`only-export-components`) +
+  `eslint-plugin-import`'s `import/no-restricted-paths` (`src/api`/`src/theme`
+  can't import `src/components`/`src/routes`/`src/app` — mirrors the
+  backend's `import-linter` direction) +
   `eslint-config-prettier` (disables any rule that'd conflict with Prettier).
 - **Prettier**: no semicolons, single quotes, 100-char print width, trailing
   commas everywhere (`.prettierrc`).

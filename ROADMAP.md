@@ -7,10 +7,13 @@ groups it into phases and states what's actually done vs. open today. Not a
 committed schedule with dates — see [BACKLOG.md](BACKLOG.md) for granular,
 short-horizon items instead.
 
-## Phase 0 — Foundation — ✅ Done
+## Phase 0 — Foundation — ✅ Done, frozen at `v0.2.0`
 
 `001_Project_Setup` through `009_Assistant_Onboarding`. Status reconciled
-per-doc (see each file's own Status note):
+per-doc (see each file's own Status note). Frozen after two review passes
+(UI-specific, then full architecture) with every approved, non-feature
+finding fixed — see [CHANGELOG.md](CHANGELOG.md)'s `[0.2.0]` entry and
+[REPO_HEALTH_REPORT.md](REPO_HEALTH_REPORT.md):
 
 | Feature | Status |
 |---|---|
@@ -18,8 +21,8 @@ per-doc (see each file's own Status note):
 | 002 Docker | ✅ Done (delivered under 001) |
 | 003 CI/CD | ✅ Done (delivered under 001; CD itself still open) |
 | 004 Backend Core | ⚠️ Mostly done (error-response format, request middleware still open) |
-| 005 Frontend Framework | ✅ Done (delivered under 001) |
-| 006 Theme Engine | ⚠️ Core done (typography/spacing/token system still open) |
+| 005 Frontend Framework | ✅ Done (application shell, routing, component library) |
+| 006 Theme Engine | ✅ Core done (custom spacing scale and broader component library deferred to real UI features that need them) |
 | 007 Dashboard | ❌ Not started (only a diagnostic health view exists) |
 | 008 Settings | ❌ Not started (env-var config only, no UI/API) |
 | 009 Assistant Onboarding | ❌ Not started (name is configurable, but no onboarding flow) |

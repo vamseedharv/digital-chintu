@@ -58,12 +58,16 @@ Current coverage: **97% statements** (the only gap is `db/base.py`'s empty
   by jsdom) via `src/setupTests.ts`'s global polyfill plus a per-test override
   for OS-preference scenarios.
 - `App.test.tsx` (integration) mocks only the network boundary (`fetch`) and
-  renders the real `ThemeProvider` + `App` + `HealthStatus` together.
+  renders the real `ThemeProvider` + router (`AppShell` + its routes)
+  together — including the 404 route and the mobile nav drawer's open/close
+  behavior, not just the home page.
 
 Run with coverage: `npx vitest run --coverage` → `frontend-dashboard/coverage/index.html`.
-Current coverage: **98% statements, 97% branches, 100% functions/lines** (the
-one gap is `ThemeProvider`'s `typeof window === 'undefined'` SSR guard,
-untestable in jsdom without mocking the mock).
+Current coverage: **98.21% statements, 97.4% branches, 100% functions/lines**.
+Two deliberate gaps: `ThemeProvider`'s `typeof window === 'undefined'` SSR
+guard (untestable in jsdom without mocking the mock) and `MobileNav`'s
+`!first || !last` empty-focusable-list guard (defensive — the drawer always
+renders at least a close button and one nav link in practice).
 
 ## E2E
 

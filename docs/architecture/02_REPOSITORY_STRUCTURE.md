@@ -25,11 +25,15 @@ backend/               FastAPI backend
 frontend-dashboard/    React + TypeScript + Vite + Tailwind web dashboard
   src/
     api/                  fetch client + typed calls + hooks
-    components/            presentational UI components
+    app/                   composition root: AppShell, router, navigation
+    routes/                 page components (HomePage, NotFoundPage, ErrorPage)
+    components/ui/           presentational primitives (Button, Card, ...)
+    components/layout/        Sidebar, MobileNav, NavLinks, PageContainer
+    components/               feature components (HealthStatus, ThemeToggle)
     theme/                 dark/light ThemeProvider + useTheme
     __tests__/
       unit/                 one hook/component/module in isolation
-      integration/           the composed App tree
+      integration/           the composed app tree (router + AppShell)
   package.json, vite.config.ts, eslint.config.js, tsconfig*.json
   Dockerfile, .dockerignore, nginx.conf, .env.example, README.md
 
