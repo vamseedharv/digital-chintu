@@ -4,6 +4,26 @@
    on <html>, instead of only following prefers-color-scheme. */
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* Design tokens: a brand color ramp, used by the primary Button variant and
+   active-nav-link styling. Tailwind's default spacing/sizing/radius/breakpoint
+   scales are used as-is everywhere else — no need to reinvent those. */
+@theme {
+  --color-brand-50: #eef2ff;
+  --color-brand-100: #e0e7ff;
+  --color-brand-200: #c7d2fe;
+  --color-brand-400: #818cf8;
+  --color-brand-500: #6366f1;
+  --color-brand-600: #4f46e5;
+  --color-brand-700: #4338ca;
+}
+
+/* Glassmorphism surface, shared by Card and anything else that needs the
+   same translucent/blurred panel look — formalizes what HealthStatus used
+   to hand-type inline. */
+@utility glass {
+  @apply border border-slate-200 bg-white/70 backdrop-blur-md dark:border-slate-700 dark:bg-slate-800/50;
+}
+
 body {
   @apply bg-slate-50 text-slate-900 dark:bg-slate-900 dark:text-slate-100;
 }

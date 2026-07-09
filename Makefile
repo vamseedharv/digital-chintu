@@ -8,8 +8,10 @@
 # otherwise compute a path that doesn't exist.
 ifneq ($(wildcard backend/.venv/bin/python),)
 	VENV_PY := .venv/bin/python
+	VENV_BIN := .venv/bin
 else
 	VENV_PY := .venv/Scripts/python.exe
+	VENV_BIN := .venv/Scripts
 endif
 
 .PHONY: setup backend-dev frontend-dev lint format test docker-up docker-down
@@ -24,7 +26,7 @@ frontend-dev:
 	cd frontend-dashboard && npm run dev
 
 lint:
-	cd backend && $(VENV_PY) -m ruff check . && $(VENV_PY) -m mypy .
+	cd backend && $(VENV_PY) -m ruff check . && $(VENV_PY) -m mypy . && $(VENV_BIN)/lint-imports
 	cd frontend-dashboard && npm run lint && npm run typecheck
 
 format:

@@ -37,6 +37,9 @@ jobs:
       - name: Type check (mypy)
         run: mypy .
 
+      - name: Architecture boundaries (import-linter)
+        run: lint-imports
+
       - name: Test (Pytest)
         run: pytest
 

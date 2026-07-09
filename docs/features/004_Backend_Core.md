@@ -1,5 +1,17 @@
 # 004 Backend Core
 
+## Status: Mostly delivered under 001_Project_Setup
+
+The FastAPI app factory, Clean Architecture layer folders
+(`api/core/domain/services/repositories/db`), environment-driven config,
+structured logging, and a health endpoint all exist — see
+[docs/architecture/01_SYSTEM_ARCHITECTURE.md](../architecture/01_SYSTEM_ARCHITECTURE.md).
+**Remaining scope, not yet done**: standardized error-response format,
+request-logging middleware, exception handlers, and a task scheduler wiring
+point (APScheduler is named in the tech stack but wasn't wired in until this
+review — see `backend/app/core/scheduler.py`, added empty pending the first
+feature that needs it, same pattern as `domain/services/repositories`).
+
 ## Objective
 Implement the feature in a production-ready manner.
 

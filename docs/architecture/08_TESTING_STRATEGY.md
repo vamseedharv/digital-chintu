@@ -11,10 +11,13 @@ each new feature lands — don't invent a different structure per feature.
 | Unit | Pytest (backend), Vitest (frontend) | One module/hook/component, dependencies mocked or monkeypatched | `backend/tests/unit/`, `frontend-dashboard/src/__tests__/unit/` |
 | Integration | Pytest + `TestClient` (backend), Testing Library (frontend) | The real app wired together — routing + middleware + config, or the composed component tree — no external services | `backend/tests/integration/`, `frontend-dashboard/src/__tests__/integration/` |
 | E2E | Playwright | Both real services running together, driven through a real browser | `tests/e2e/` |
+| Architecture conformance | `import-linter` | Static check that `api -> services -> repositories -> domain` isn't violated — not a test of behavior, a test of structure | `backend/pyproject.toml`'s `[tool.importlinter]`, run via `make lint` |
 
-Run all three locally with `make test` (unit + integration for both
-packages) plus `cd tests && npm run test:e2e` (E2E, separate because it needs
-both servers running and is slower).
+Run all three test tiers locally with `make test` (unit + integration for
+both packages) plus `cd tests && npm run test:e2e` (E2E, separate because it
+needs both servers running and is slower). Architecture conformance runs as
+part of `make lint`, not `make test` — it's a lint-time structural check, not
+a behavioral test.
 
 ## Backend
 
@@ -32,6 +35,10 @@ both servers running and is slower).
   module under a monkeypatched environment (see `tests/unit/test_session.py`)
   — not a pattern to reach for casually, but necessary here without
   refactoring the production module.
+- `tests/unit/test_scheduler.py` verifies the APScheduler instance
+  (`core/scheduler.py`) starts and stops with the FastAPI app's lifespan
+  (via `with TestClient(create_app()):`) — it has no jobs to test yet, only
+  that the lifecycle wiring itself works.
 
 Run with coverage: `pytest --cov-report=html` → `backend/htmlcov/index.html`.
 Current coverage: **97% statements** (the only gap is `db/base.py`'s empty

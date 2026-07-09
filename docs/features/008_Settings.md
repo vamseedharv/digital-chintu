@@ -1,5 +1,11 @@
 # 008 Settings
 
+## Status: Not started
+
+Configuration today is env-var-driven only (`backend/app/core/config.py`,
+requires a restart to change). There is no user-facing Settings feature —
+no API to read/write settings at runtime, no Settings UI. Fully open.
+
 ## Objective
 Implement the feature in a production-ready manner.
 

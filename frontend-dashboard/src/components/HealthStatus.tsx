@@ -1,21 +1,18 @@
-import { motion } from 'framer-motion'
 import type { HealthState } from '../api/useHealth'
+import { Card } from './ui/Card'
+import { Heading } from './ui/Heading'
+import { Skeleton } from './ui/Skeleton'
 
 export function HealthStatus({ health }: { health: HealthState }) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.2 }}
-      className="rounded-2xl border border-slate-200 bg-white/70 p-6 shadow-sm backdrop-blur-md
-        dark:border-slate-700 dark:bg-slate-800/50"
-    >
-      <h2 className="text-lg font-semibold">Backend connection</h2>
+    <Card>
+      <Heading level={2}>Backend connection</Heading>
 
       {health.kind === 'loading' && (
-        <p className="mt-2 text-slate-500 dark:text-slate-400" role="status">
-          Checking backend health…
-        </p>
+        <div className="mt-3" role="status">
+          <span className="sr-only">Checking backend health…</span>
+          <Skeleton className="h-4 w-48" />
+        </div>
       )}
 
       {health.kind === 'success' && (
@@ -29,6 +26,6 @@ export function HealthStatus({ health }: { health: HealthState }) {
           Could not reach the backend. Is it running?
         </p>
       )}
-    </motion.div>
+    </Card>
   )
 }

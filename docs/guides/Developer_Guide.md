@@ -25,9 +25,10 @@ the *how*.
 
 Don't let `api/` import from `repositories/` directly, or `services/` import
 FastAPI/Starlette types — keep the dependency direction one-way
-(api → services → repositories → domain). Nothing enforces this
-automatically yet (see `docs/architecture/01_SYSTEM_ARCHITECTURE.md`'s
-"Known gaps"); hold the line by convention until it's worth adding tooling.
+(api → services → repositories → domain). This is enforced, not just
+convention: `import-linter` (`backend/pyproject.toml`'s
+`[tool.importlinter]`) fails `make lint` / CI if it's violated. `core/` and
+`db/` are exempt (cross-cutting infrastructure).
 
 ## Where new code goes (frontend)
 

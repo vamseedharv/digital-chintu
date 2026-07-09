@@ -1,6 +1,8 @@
 # 02 Repository Structure
 
 Status: **implemented** (see [docs/features/001_Project_Setup.md](../features/001_Project_Setup.md)).
+For the actual module-level and package-level dependency graph (what imports
+what, and what's enforced), see [DEPENDENCY_GRAPH.md](../../DEPENDENCY_GRAPH.md).
 
 ## Layout
 
@@ -9,7 +11,7 @@ backend/               FastAPI backend
   app/
     main.py             app factory (entrypoint: app.main:app)
     api/v1/              routers + endpoints
-    core/                config.py, logging.py
+    core/                config.py, logging.py, scheduler.py (APScheduler, wired but idle)
     domain/               empty — framework-independent entities (future)
     services/             empty — application logic (future)
     repositories/          empty — data access (future)
@@ -17,7 +19,7 @@ backend/               FastAPI backend
   tests/
     unit/                 isolated tests of one module
     integration/           tests of the wired-up app via TestClient
-  pyproject.toml         deps + tool config (ruff, black, mypy, pytest)
+  pyproject.toml         deps + tool config (ruff, black, mypy, pytest, import-linter)
   Dockerfile, .dockerignore, .env.example, README.md
 
 frontend-dashboard/    React + TypeScript + Vite + Tailwind web dashboard

@@ -17,7 +17,8 @@ apply the same conventions as new endpoints are added.
   `dict[str, str]` rather than a Pydantic `response_model`. That's fine for
   one endpoint with no real schema to document; the first endpoint with
   actual request/response validation needs should use a `response_model` so
-  FastAPI's generated OpenAPI schema (`/openapi.json`) stays accurate.
+  FastAPI's generated OpenAPI schema (`/openapi.json`) stays accurate (see
+  [BACKLOG.md](../../BACKLOG.md)).
 - CORS is restrictive by default (`CORS_ORIGINS`, comma-separated allow-list
   — no wildcard), configured in `backend/app/main.py`.
 

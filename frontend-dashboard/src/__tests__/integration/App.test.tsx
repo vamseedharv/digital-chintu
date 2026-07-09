@@ -1,12 +1,14 @@
 import { render, screen, waitFor } from '@testing-library/react'
+import { createMemoryRouter, RouterProvider } from 'react-router'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import App from '../../App'
+import { routes } from '../../app/router'
 import { ThemeProvider } from '../../theme/ThemeProvider'
 
-function renderApp() {
+function renderApp(initialEntries: string[] = ['/']) {
+  const router = createMemoryRouter(routes, { initialEntries })
   return render(
     <ThemeProvider>
-      <App />
+      <RouterProvider router={router} />
     </ThemeProvider>,
   )
 }
@@ -26,18 +28,18 @@ describe('App', () => {
     vi.unstubAllGlobals()
   })
 
-  it('renders the app title', () => {
+  it('renders the app name in the sidebar', () => {
     renderApp()
-    expect(screen.getByRole('heading', { name: 'Digital Chintu' })).toBeInTheDocument()
+    expect(screen.getByText('Digital Chintu')).toBeInTheDocument()
   })
 
   it('shows the backend health status once loaded', async () => {
     renderApp()
 
-    expect(screen.getByRole('status')).toHaveTextContent('Checking backend health')
+    expect(screen.getByRole('status')).toHaveTextContent(/checking backend health/i)
 
     await waitFor(() => {
-      expect(screen.getByRole('status')).toHaveTextContent(/Chintu backend is ok/)
+      expect(screen.getByText(/Chintu backend is ok/)).toBeInTheDocument()
     })
   })
 
@@ -64,5 +66,36 @@ describe('App', () => {
     await user.click(toggle)
 
     expect(toggle.textContent).not.toBe(initialLabel)
+  })
+
+  it('shows the 404 page for an unknown route', () => {
+    renderApp(['/does-not-exist'])
+
+    expect(screen.getByRole('heading', { name: 'Page not found' })).toBeInTheDocument()
+  })
+
+  it('opens the mobile nav when the hamburger button is clicked', async () => {
+    const { user } = await import('@testing-library/user-event').then((m) => ({
+      user: m.default.setup(),
+    }))
+
+    renderApp()
+
+    // The mobile nav only renders (at all, in the DOM) while open — its
+    // "Close navigation" button is a reliable marker for that, since the
+    // always-present desktop Sidebar shares the same "Primary" nav label
+    // (they're mutually exclusive only via CSS, which jsdom doesn't apply).
+    expect(screen.queryByRole('button', { name: 'Close navigation' })).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Open navigation' }))
+
+    expect(screen.getByRole('button', { name: 'Close navigation' })).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Close navigation' }))
+
+    // AnimatePresence keeps the element mounted for its exit transition.
+    await waitFor(() => {
+      expect(screen.queryByRole('button', { name: 'Close navigation' })).not.toBeInTheDocument()
+    })
   })
 })

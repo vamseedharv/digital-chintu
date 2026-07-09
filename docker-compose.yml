@@ -23,6 +23,19 @@ services:
     ports:
       - "${BACKEND_PORT:-8000}:8000"
     restart: unless-stopped
+    # Conservative fixed limits so this doesn't starve the other container on
+    # a memory-constrained Raspberry Pi. Edit directly if your device needs
+    # different values — not templated via .env: older Docker Compose
+    # releases (confirmed on v2.2.3, plausible on Raspberry Pi OS's default
+    # package) mis-parse a memory-unit string ("512m") when it comes through
+    # ${VAR:-default} substitution instead of a YAML literal.
+    mem_limit: 512m
+    # Verified enforced (docker inspect: HostConfig.Memory=536870912) on
+    # Docker Engine 20.10 / Compose 2.2. `cpus` below is valid Compose Spec
+    # syntax but wasn't enforced by that same engine/compose combo
+    # (HostConfig.CpuQuota stayed 0) — likely needs a newer Docker Engine.
+    # Keep it; it costs nothing on engines where it's a no-op.
+    cpus: 1.0
     healthcheck:
       <<: *healthcheck-defaults
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health')"]
@@ -39,6 +52,8 @@ services:
       backend:
         condition: service_healthy
     restart: unless-stopped
+    mem_limit: 128m
+    cpus: 0.5
     healthcheck:
       <<: *healthcheck-defaults
       test: ["CMD", "wget", "--spider", "-q", "http://localhost/"]

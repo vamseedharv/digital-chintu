@@ -1,5 +1,12 @@
 # 009 Assistant Onboarding
 
+## Status: Not started
+
+The assistant's name (`APP_NAME`) is runtime-configurable via environment
+variable end-to-end (backend config → `/api/v1/health` → frontend header,
+verified with tests) — but there is no onboarding *flow* for a user to set
+it through the UI. Fully open.
+
 ## Objective
 Implement the feature in a production-ready manner.
 

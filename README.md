@@ -4,11 +4,13 @@ Digital Chintu is an open-source, self-hosted AI Home Platform — a configurabl
 home assistant with a web dashboard, mobile client, and (later) voice, plugin,
 and automation features. No paid subscriptions are required to run it.
 
-This repository is currently in the **Project Setup** stage: the monorepo
-scaffolding, tooling, and skeleton backend/frontend exist, but feature work
-(reminders, voice, AI routing, plugins, media integrations, etc.) has not
-started yet. See [docs/features/001_Project_Setup.md](docs/features/001_Project_Setup.md)
-for the scope of this stage and [CLAUDE.md](CLAUDE.md) for repository-wide
+**The foundation is stable (`v0.1.0`)**: the monorepo scaffolding, backend
+and frontend skeletons, Docker, CI, and dev tooling all exist, are tested,
+and have passed an architecture review. **No product feature has been built
+yet** — no reminders, voice, AI routing, plugins, or media integrations. See
+[PROJECT_STATUS.md](PROJECT_STATUS.md) for the current snapshot,
+[ROADMAP.md](ROADMAP.md) for what's next, [BACKLOG.md](BACKLOG.md) for
+granular open items, and [CLAUDE.md](CLAUDE.md) for repository-wide
 guidance.
 
 ## Repository layout
@@ -77,7 +79,7 @@ All common tasks are available as `make` targets (see the [Makefile](Makefile)):
 
 ```bash
 make setup          # bootstrap backend venv + install all dependencies
-make lint           # lint backend (Ruff, mypy) and frontend (ESLint, tsc)
+make lint           # Ruff, mypy, import-linter (backend); ESLint, tsc (frontend)
 make format         # format backend (Black) and frontend (Prettier)
 make test           # run backend (Pytest) and frontend (Vitest) test suites
 make docker-up       # build and start all services via Docker Compose
@@ -106,10 +108,15 @@ the frontend suite on Linux, on every push and pull request to `main`.
 
 ## Documentation
 
+- [PROJECT_STATUS.md](PROJECT_STATUS.md) — current snapshot: what exists, test coverage, platform verification, known limitations.
+- [ROADMAP.md](ROADMAP.md) — strategic phase-level sequencing of `docs/features/001`–`050`.
+- [BACKLOG.md](BACKLOG.md) — granular open items and deferred cleanups.
+- [DEPENDENCY_GRAPH.md](DEPENDENCY_GRAPH.md) — internal module graph (enforced by `import-linter`) and external package dependencies.
 - [CLAUDE.md](CLAUDE.md) — guidance for AI-assisted development in this repository.
 - [docs/guides/Setup_Guide.md](docs/guides/Setup_Guide.md) — step-by-step local setup and troubleshooting.
 - [docs/guides/Developer_Guide.md](docs/guides/Developer_Guide.md) — day-to-day conventions: where new code goes, testing patterns, config.
 - [docs/guides/Coding_Standards.md](docs/guides/Coding_Standards.md) — lint/format/type-check rules actually enforced.
+- [docs/guides/Git_Workflow.md](docs/guides/Git_Workflow.md) — branch naming, commit, and PR conventions.
 - [docs/architecture/](docs/architecture) — system architecture, repository structure, deployment, testing strategy, API guidelines, security, UI design system — filled in as each part is implemented.
 - [docs/Foundation/](docs/Foundation) — original vision, architecture, tech stack, and coding standards pack.
 - [docs/SDS/](docs/SDS) — per-domain software design specifications.

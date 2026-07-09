@@ -2,6 +2,10 @@
 
 Status: **Project Setup implemented** (see [docs/features/001_Project_Setup.md](../features/001_Project_Setup.md)). This
 describes what's actually running today, with what's still planned called out explicitly.
+See [PROJECT_STATUS.md](../../PROJECT_STATUS.md) for the current snapshot,
+[ROADMAP.md](../../ROADMAP.md) for what's next, and
+[DEPENDENCY_GRAPH.md](../../DEPENDENCY_GRAPH.md) for the full internal/external
+dependency picture.
 
 ## Overview
 
@@ -37,15 +41,15 @@ it (no compiled/CI-enforced boundary yet — see "Known gaps" below):
 | Layer | Path | Today |
 |---|---|---|
 | HTTP interface | `api/v1/` | `router.py` aggregates endpoint routers; one endpoint (`endpoints/health.py`) exists |
-| Cross-cutting | `core/` | `config.py` (pydantic-settings, env-driven), `logging.py` (console + rotating file handler) |
+| Cross-cutting | `core/` | `config.py` (pydantic-settings, env-driven), `logging.py` (console + rotating file handler), `scheduler.py` (APScheduler instance, started/stopped via the app's lifespan, no jobs registered yet) |
 | Application logic | `services/` | Empty — no feature has needed business logic yet |
 | Data access | `repositories/` | Empty — no feature has needed persistence yet |
 | Domain | `domain/` | Empty — no entities defined yet |
 | Infrastructure | `db/` | `base.py` (SQLAlchemy `DeclarativeBase`), `session.py` (engine/session factory, `get_db()` FastAPI dependency) |
 
-The app factory (`app/main.py`) wires config, logging, CORS middleware, and
-the `/api/v1` router together and is the single entrypoint
-(`uvicorn app.main:app`).
+The app factory (`app/main.py`) wires config, logging, CORS middleware, the
+`/api/v1` router, and the scheduler's start/stop (via a `lifespan` context
+manager) together, and is the single entrypoint (`uvicorn app.main:app`).
 
 ## Frontend — composition
 
@@ -77,12 +81,21 @@ runtime-configurable end-to-end: backend env var → `/api/v1/health` response
   push (e.g. notifications, live device state).
 - No database models/migrations — `db/` only has engine/session scaffolding.
   Alembic should be introduced with the *first* model, not before.
-- No import-boundary enforcement between layers (e.g. nothing stops
-  `services/` from importing a FastAPI type today) — acceptable while those
-  packages are empty; worth adding (e.g. `import-linter`) once they have
-  real code to protect.
+- ~~No import-boundary enforcement between layers~~ — **closed**: `import-linter`
+  enforces `api -> services -> repositories -> domain` (one-way) via a
+  `layers` contract in `backend/pyproject.toml`, run in CI and `make lint`.
+  `core`/`db` are deliberately excluded from the ordering (cross-cutting
+  infrastructure, importable by any layer).
+- ~~No import-boundary enforcement on the frontend~~ — **closed**: ESLint's
+  `import/no-restricted-paths` (`frontend-dashboard/eslint.config.js`) stops
+  `src/api` and `src/theme` (cross-cutting, like backend's `core`/`db`) from
+  importing `src/components`, `src/routes`, or `src/app` — the direction
+  those UI layers already depended on by convention, now enforced in
+  `make lint`.
 - Plugin engine (`plugins/`) and mobile client (`frontend-mobile/`) are
-  reserved paths only — see their own `README.md`.
+  reserved paths only — see their own `README.md`. See
+  [BACKLOG.md](../../BACKLOG.md) for what a plugin extension point needs
+  before `010_Plugin_Framework` can start.
 
 ## Cross-platform
 

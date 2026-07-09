@@ -45,6 +45,14 @@ port variables automatically.
 - Both services have a Compose `healthcheck`; `frontend-dashboard` won't
   start serving until `backend` reports healthy
   (`depends_on: condition: service_healthy`).
+- Both services have fixed resource limits (`mem_limit: 512m`/`128m`,
+  `cpus: 1.0`/`0.5`) — conservative for a Raspberry Pi, edit directly in
+  `docker-compose.yml` if your device needs different values. Not templated
+  via `.env`: Docker Compose 2.2.x mis-parses a memory-unit string like
+  `"512m"` when it comes through `${VAR:-default}` substitution instead of a
+  YAML literal. Memory limits are confirmed enforced (`docker inspect`); CPU
+  limits depend on the Docker Engine version (not enforced on Engine 20.10 in
+  testing, harmless no-op there — should work on newer engines).
 
 ### Common operations
 

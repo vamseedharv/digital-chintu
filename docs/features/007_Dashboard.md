@@ -1,5 +1,12 @@
 # 007 Dashboard
 
+## Status: Not started
+
+`frontend-dashboard/src/components/HealthStatus.tsx` is a diagnostic
+backend-connectivity view built for Project Setup verification purposes —
+it is not the actual Dashboard feature (widgets, device tiles, layout,
+multiple data sources). Fully open.
+
 ## Objective
 Implement the feature in a production-ready manner.
 

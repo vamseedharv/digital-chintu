@@ -1,5 +1,17 @@
 # 006 Theme Engine
 
+## Status: Done
+
+Dark/light toggle (class-based, persisted, OS-preference default), a design
+token layer (brand color ramp + `.glass` utility in `index.css`'s `@theme`
+block), typography primitives (`Heading`, `Text`), and an icon system
+(`lucide-react`) are all implemented — see
+[docs/architecture/09_UI_DESIGN_SYSTEM.md](../architecture/09_UI_DESIGN_SYSTEM.md).
+**Remaining scope, not yet done**: a custom spacing scale (Tailwind's default
+is used as-is — sufficient so far) and a broader component library beyond
+`components/ui/`'s current set — extract more primitives as real UI features
+(Dashboard, Settings) need them, not speculatively.
+
 ## Objective
 Implement the feature in a production-ready manner.
 

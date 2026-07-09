@@ -48,4 +48,14 @@ describe('ThemeToggle', () => {
       'Dark mode',
     )
   })
+
+  it('has a visible keyboard focus ring, like every other interactive control', () => {
+    render(
+      <ThemeProvider>
+        <ThemeToggle />
+      </ThemeProvider>,
+    )
+
+    expect(screen.getByRole('button')).toHaveClass('focus-visible:ring-2')
+  })
 })

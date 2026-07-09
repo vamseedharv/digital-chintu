@@ -1,5 +1,14 @@
 # 003 CI CD
 
+## Status: Delivered under 001_Project_Setup
+
+CI was implemented as part of [001_Project_Setup.md](001_Project_Setup.md):
+`.github/workflows/ci.yml` runs lint/type-check/tests for the backend
+(Linux + Windows matrix) and frontend (Linux) on every push and PR. No CD
+(deployment automation) exists yet — that's genuinely open, not delivered.
+See [docs/architecture/07_DEPLOYMENT.md](../architecture/07_DEPLOYMENT.md)
+("Not yet implemented" section) before starting CD work here.
+
 ## Objective
 Implement the feature in a production-ready manner.
 

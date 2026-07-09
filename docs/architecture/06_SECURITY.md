@@ -21,6 +21,12 @@ feature exists yet (nothing today requires a user account or API key).
 - **`.dockerignore`** on both services keeps `.env`, `.venv`, and
   `node_modules` out of the build context (defense in depth — even though
   `.env` was never expected there, an explicit exclusion is cheap insurance).
+- **Fixed Docker resource limits** (`mem_limit: 512m`/`128m`, `cpus: 1.0`/`0.5`
+  in `docker-compose.yml`) bound each container's worst-case resource
+  consumption — basic availability protection on a shared, resource-constrained
+  device (Raspberry Pi). Memory limits confirmed enforced via `docker inspect`;
+  CPU limits are valid config but weren't enforced on the Docker Engine
+  version tested (see [BACKLOG.md](../../BACKLOG.md)).
 
 ## Not implemented yet
 
@@ -30,7 +36,7 @@ feature exists yet (nothing today requires a user account or API key).
 - No rate limiting, no HTTPS termination (expected to be handled by
   whatever reverse proxy sits in front of this in a real deployment — not
   yet documented here since no deployment guide beyond Docker Compose exists).
-- No dependency-vulnerability scanning wired into CI yet.
+- No dependency-vulnerability scanning wired into CI yet (see [BACKLOG.md](../../BACKLOG.md)).
 
 Revisit this document as soon as the first feature introduces user accounts,
 API tokens, or handles data that needs encryption at rest.

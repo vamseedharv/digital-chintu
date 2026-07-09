@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion'
+import clsx from 'clsx'
 import { useTheme } from '../theme/useTheme'
 
 export function ThemeToggle() {
@@ -10,9 +11,11 @@ export function ThemeToggle() {
       type="button"
       onClick={toggleTheme}
       aria-label={`Switch to ${isDark ? 'light' : 'dark'} mode`}
-      className="rounded-full border border-slate-300 bg-white/60 px-4 py-2 text-sm font-medium
-        text-slate-700 shadow-sm backdrop-blur transition-colors hover:bg-white/80
-        dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-200 dark:hover:bg-slate-800/80"
+      className={clsx(
+        'glass rounded-full px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition-colors',
+        'hover:bg-white/80 dark:text-slate-200 dark:hover:bg-slate-800/80',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900',
+      )}
     >
       <motion.span
         key={theme}

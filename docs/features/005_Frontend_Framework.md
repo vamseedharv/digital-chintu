@@ -1,5 +1,19 @@
 # 005 Frontend Framework
 
+## Status: Done
+
+React + TypeScript + Vite + Tailwind CSS v4 + Framer Motion, ESLint/Prettier/tsc
+strict mode, Vitest unit+integration tests — all set up in
+`frontend-dashboard/`. Extended with a full UI Framework layer: application
+shell, responsive sidebar/drawer navigation, `react-router` routing (with
+404 and error-boundary pages), and a reusable component library
+(`components/ui/`). See
+[docs/architecture/02_REPOSITORY_STRUCTURE.md](../architecture/02_REPOSITORY_STRUCTURE.md).
+No remaining scope for the framework itself; UI *features* built on top of it
+(Dashboard, Settings, etc.) are separate, still-open docs below — this
+feature intentionally contains no dashboard widgets, weather, reminders, AI,
+or plugin content.
+
 ## Objective
 Implement the feature in a production-ready manner.
 

@@ -8,12 +8,11 @@ test('dashboard loads and shows backend health status using the configured app n
   const status = page.getByRole('status')
   await expect(status).toContainText(/backend is ok/i, { timeout: 10_000 })
 
-  // The header name comes from the backend's runtime-configurable app_name
-  // (see backend/app/core/config.py), not a hardcoded product name — so it
-  // must match the same name reported in the health status line.
-  const heading = page.getByRole('heading', { level: 1 })
-  const headingText = await heading.textContent()
-  await expect(status).toContainText(headingText ?? '')
+  // The sidebar's app name comes from the backend's runtime-configurable
+  // app_name (see backend/app/core/config.py), not a hardcoded product name
+  // — so it must match the same name reported in the health status line.
+  const appName = await page.getByTestId('app-name').textContent()
+  await expect(status).toContainText(appName ?? '')
 })
 
 test('theme toggle switches between light and dark mode', async ({ page }) => {
@@ -25,4 +24,23 @@ test('theme toggle switches between light and dark mode', async ({ page }) => {
   await toggle.click()
 
   await expect(page.locator('html')).not.toHaveAttribute('class', classBefore ?? '')
+})
+
+test('shows the 404 page for an unknown route', async ({ page }) => {
+  await page.goto('/does-not-exist')
+
+  await expect(page.getByRole('heading', { name: 'Page not found' })).toBeVisible()
+  await page.getByRole('link', { name: 'Back to Home' }).click()
+  await expect(page).toHaveURL('/')
+})
+
+test('mobile drawer nav opens and closes', async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 812 })
+  await page.goto('/')
+
+  await page.getByRole('button', { name: 'Open navigation' }).click()
+  await expect(page.getByRole('button', { name: 'Close navigation' })).toBeVisible()
+
+  await page.getByRole('button', { name: 'Close navigation' }).click()
+  await expect(page.getByRole('button', { name: 'Close navigation' })).not.toBeVisible()
 })

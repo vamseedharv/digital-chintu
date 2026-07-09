@@ -11,6 +11,7 @@ dependencies = [
     "pydantic>=2.9,<3.0",
     "pydantic-settings>=2.5,<3.0",
     "sqlalchemy>=2.0,<3.0",
+    "apscheduler>=3.10,<4.0",
 ]
 
 [project.optional-dependencies]
@@ -21,6 +22,7 @@ dev = [
     "ruff>=0.6,<1.0",
     "black>=24.8,<25.0",
     "mypy>=1.11,<2.0",
+    "import-linter>=2.0,<3.0",
 ]
 
 [build-system]
@@ -50,3 +52,18 @@ ignore_missing_imports = true
 [tool.pytest.ini_options]
 addopts = "-ra --cov=app --cov-report=term-missing"
 testpaths = ["tests"]
+
+[tool.importlinter]
+root_package = "app"
+
+[[tool.importlinter.contracts]]
+name = "Clean Architecture layering: api -> services -> repositories -> domain"
+type = "layers"
+layers = [
+    "app.api",
+    "app.services",
+    "app.repositories",
+    "app.domain",
+]
+# app.core and app.db are cross-cutting infrastructure, importable by any
+# layer above — deliberately not part of this ordering.

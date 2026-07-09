@@ -51,7 +51,7 @@ From [docs/Foundation/02_System_Architecture.md](docs/Foundation/02_System_Archi
 
 | Area | Choices |
 |---|---|
-| Backend | ✅ Python 3.12, FastAPI, SQLAlchemy, SQLite · APScheduler planned |
+| Backend | ✅ Python 3.12, FastAPI, SQLAlchemy, SQLite, APScheduler (wired into app lifespan, no jobs yet) |
 | Frontend | ✅ React 19, TypeScript, Vite, Tailwind CSS v4, Framer Motion |
 | Voice | OpenWakeWord, Whisper.cpp, Piper — not started |
 | Testing | ✅ Pytest (backend, unit+integration), Vitest (frontend, unit+integration), Playwright (E2E, `tests/`) |
@@ -80,9 +80,9 @@ The docs are organized in layers with different levels of detail; when implement
 
 - **`docs/Foundation/`** — the initial foundation pack (numbered 00–10). This is the most concrete/authoritative source for architecture, tech stack, repo layout, and coding standards *before any feature work begins*. Per [10_Master_Claude_Prompt.md](docs/Foundation/10_Master_Claude_Prompt.md), foundation work should be completed (backend/frontend skeleton, Docker, CI/CD) before any feature implementation starts.
 - **`docs/SDS/`** — the Software Design Specification, organized by domain area (`00_Platform`, `01_UI`, `02_Backend`, `03_Voice`, `04_Productivity`, `05_Media`, `06_AI`, `07_Clients`, `08_Plugins`, `09_Operations`). Each doc is currently a template stub following a fixed 15-section outline (Context, User Stories, Functional/Non-functional Requirements, UX Flow, UI Components, Backend Design, Database, APIs, WebSocket Events, Configuration, Test Plan, Manual QA, Claude Code Prompt, Definition of Done) — sections are largely unfilled placeholders (`(TODO)`) and need to be fleshed out with real requirements before/while a given feature is implemented.
-- **`docs/features/`** — numbered, sequential feature specs (001 through 050) intended to be implemented roughly in order, each building on the previous ones without breaking them. Recurring constraints: must run on Raspberry Pi/Linux/Windows/Docker, support dark and light themes, require no paid services, and be independently testable. `001_Project_Setup.md` is filled in and done; 002 onward are still template stubs.
+- **`docs/features/`** — numbered, sequential feature specs (001 through 050) intended to be implemented roughly in order, each building on the previous ones without breaking them. Recurring constraints: must run on Raspberry Pi/Linux/Windows/Docker, support dark and light themes, require no paid services, and be independently testable. `001_Project_Setup.md` is filled in and done; `002`–`009` have a Status note reconciling them against what 001 already delivered (some fully done, some partially, some not started — check before implementing); `010` onward are still untouched template stubs.
 - **`docs/architecture/`** — filled in for what's actually implemented: `01_SYSTEM_ARCHITECTURE`, `02_REPOSITORY_STRUCTURE`, `04_API_GUIDELINES`, `06_SECURITY`, `07_DEPLOYMENT`, `08_TESTING_STRATEGY`, `09_UI_DESIGN_SYSTEM` all describe real, current behavior (each also lists what's still a gap). `03_DATABASE_DESIGN` and `05_PLUGIN_SDK` are still one-line stubs — nothing to document until models/plugins exist.
-- **`docs/guides/`** — `Setup_Guide.md`, `Developer_Guide.md`, and `Coding_Standards.md` are filled in and real. `Git_Workflow.md`, `Prompt_Usage.md`, and `Release_Process.md` are still stubs — nothing has been decided for those yet; don't invent a policy in them.
+- **`docs/guides/`** — `Setup_Guide.md`, `Developer_Guide.md`, `Coding_Standards.md`, and `Git_Workflow.md` are filled in and real. `Prompt_Usage.md` and `Release_Process.md` are still stubs — nothing has been decided for those yet; don't invent a policy in them.
 
 ## Recurring constraints across specs
 
