@@ -1,10 +1,13 @@
 # plugins
 
-Placeholder for the Digital Chintu plugin architecture (e.g. Home Assistant
+Drop-in location for Digital Chintu plugins (e.g. Home Assistant
 integration, custom plugins — see `docs/SDS/08_Plugins/`).
 
-Intentionally empty as part of the Project Setup feature
-([docs/features/001_Project_Setup.md](../docs/features/001_Project_Setup.md)). No
-plugin engine or plugin implementations are part of this feature; this directory
-only reserves the location defined in
-[docs/Foundation/03_Repository_Structure.md](../docs/Foundation/03_Repository_Structure.md).
+The extension point itself is implemented
+([docs/features/010_Plugin_Framework.md](../docs/features/010_Plugin_Framework.md),
+[docs/architecture/05_PLUGIN_SDK.md](../docs/architecture/05_PLUGIN_SDK.md)):
+the backend discovers any `<name>/plugin.py` here that exposes a
+module-level `plugin: Plugin` instance (`backend/app/core/plugins.py`) at
+startup and mounts its routes under `/api/v1/plugins/{slug}`. This
+directory is still empty — no real plugin has been built yet; that's
+`041_Home_Assistant`/`042_Device_Control`, both not started.

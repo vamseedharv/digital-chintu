@@ -27,13 +27,14 @@ finding fixed — see [CHANGELOG.md](CHANGELOG.md)'s `[0.2.0]` entry and
 | 008 Settings | ❌ Not started (env-var config only, no UI/API) |
 | 009 Assistant Onboarding | ❌ Not started (name is configurable, but no onboarding flow) |
 
-## Phase 1 — Plugin Framework — Next up
+## Phase 1 — Plugin Framework — ✅ Done
 
-`010_Plugin_Framework`. Nothing built yet — see
-[docs/architecture/01_SYSTEM_ARCHITECTURE.md](docs/architecture/01_SYSTEM_ARCHITECTURE.md)'s
-"Known gaps" and [BACKLOG.md](BACKLOG.md) for what a plugin extension point
-needs before this can start (discovery mechanism, plugin interface, dynamic
-router registration).
+`010_Plugin_Framework`. The extension point (discovery mechanism, plugin
+interface, dynamic router registration) is built — see
+[docs/features/010_Plugin_Framework.md](docs/features/010_Plugin_Framework.md)
+and [docs/architecture/05_PLUGIN_SDK.md](docs/architecture/05_PLUGIN_SDK.md).
+No real plugin exists yet; that's Phase 8 (`041_Home_Assistant`,
+`042_Device_Control`).
 
 ## Phase 2 — Voice Pipeline
 

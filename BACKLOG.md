@@ -7,13 +7,13 @@ section; not dated commitments.
 
 ## Before Phase 1 (Plugin Framework) starts
 
-- [ ] Design the plugin extension point: a discovery mechanism, a plugin
+- [x] Design the plugin extension point: a discovery mechanism, a plugin
   interface/base class, and a dynamic router-registration hook in
-  `backend/app/main.py`'s `create_app()`. Today, `plugins/` is a reserved
-  directory name only — adding a plugin would mean hand-editing
-  `api/v1/router.py`, which defeats the purpose. See
-  `docs/architecture/01_SYSTEM_ARCHITECTURE.md`'s "Known gaps" and
-  `docs/architecture/05_PLUGIN_SDK.md` (still a stub).
+  `backend/app/main.py`'s `create_app()`. Done and implemented — see
+  `docs/features/010_Plugin_Framework.md` (Status: Done) and
+  `docs/architecture/05_PLUGIN_SDK.md`. `plugins/` itself still has no real
+  plugin in it; `041_Home_Assistant`/`042_Device_Control` are what will
+  eventually use this.
 
 ## Before Phase 4 (Productivity) starts
 

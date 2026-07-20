@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository state
 
-**Project Setup is complete** (see [docs/features/001_Project_Setup.md](docs/features/001_Project_Setup.md)): the monorepo scaffolding, backend skeleton, frontend skeleton, Docker, CI, and dev tooling all exist and are verified working. No feature work (reminders, voice, AI routing, plugins, media integrations, etc.) has started — `backend/app/domain`, `backend/app/services`, and `backend/app/repositories` are intentionally empty packages, and `frontend-mobile/`, `shared/`, `plugins/` are placeholder directories only. Everything under `docs/` remains the design specification driving that future work.
+**Project Setup is complete** (see [docs/features/001_Project_Setup.md](docs/features/001_Project_Setup.md)): the monorepo scaffolding, backend skeleton, frontend skeleton, Docker, CI, and dev tooling all exist and are verified working. **Phase 1 (`010_Plugin_Framework`) is also done**: `backend/app/core/plugins.py` provides plugin discovery/registration, but no actual plugin exists yet. No other feature work (reminders, voice, AI routing, media integrations, etc.) has started — `backend/app/domain`, `backend/app/services`, and `backend/app/repositories` are intentionally empty packages, and `frontend-mobile/`, `shared/`, `plugins/` (still no real plugin in it) are placeholder directories only. Everything under `docs/` remains the design specification driving that future work.
 
 ## Commands
 
@@ -41,7 +41,7 @@ From [docs/Foundation/02_System_Architecture.md](docs/Foundation/02_System_Archi
 - Database: SQLite via SQLAlchemy — **scaffolded** (engine/session in `backend/app/db`), no models yet
 - React Dashboard (web client) — **scaffolded** (`frontend-dashboard/`)
 - REST API — **scaffolded** (`/api/v1/health`); WebSocket API — planned, not yet added
-- Plugin Engine (Home Assistant, custom plugins) — planned, `plugins/` is a placeholder
+- Plugin Engine — **scaffolded** (`backend/app/core/plugins.py`: discovery, `Plugin` contract, dynamic router registration — see `docs/architecture/05_PLUGIN_SDK.md`); Home Assistant/custom plugin implementations themselves are still planned, `plugins/` has none yet
 - Android client, future iOS client — planned, `frontend-mobile/` is a placeholder (framework not yet chosen)
 - Voice pipeline: OpenWakeWord (wake word) → Whisper.cpp (STT) → Piper (TTS) — planned, not started
 
@@ -67,7 +67,7 @@ backend/            FastAPI backend (Clean Architecture skeleton, see backend/RE
 frontend-dashboard/ React + TypeScript + Vite + Tailwind dashboard (see frontend-dashboard/README.md)
 frontend-mobile/    Placeholder — Android/iOS framework not yet chosen (frontend-mobile/README.md)
 shared/             Placeholder — shared client code, populated once an API surface exists
-plugins/            Placeholder — plugin engine/implementations, not started
+plugins/            Plugin engine implemented (backend/app/core/plugins.py); no real plugin dropped in yet
 docs/               Specifications (this folder)
 docker/             Docker documentation (Dockerfiles live per-service; docker-compose.yml at repo root)
 scripts/            Cross-platform dev bootstrap scripts (setup.sh, setup.ps1)
@@ -80,8 +80,8 @@ The docs are organized in layers with different levels of detail; when implement
 
 - **`docs/Foundation/`** — the initial foundation pack (numbered 00–10). This is the most concrete/authoritative source for architecture, tech stack, repo layout, and coding standards *before any feature work begins*. Per [10_Master_Claude_Prompt.md](docs/Foundation/10_Master_Claude_Prompt.md), foundation work should be completed (backend/frontend skeleton, Docker, CI/CD) before any feature implementation starts.
 - **`docs/SDS/`** — the Software Design Specification, organized by domain area (`00_Platform`, `01_UI`, `02_Backend`, `03_Voice`, `04_Productivity`, `05_Media`, `06_AI`, `07_Clients`, `08_Plugins`, `09_Operations`). Each doc is currently a template stub following a fixed 15-section outline (Context, User Stories, Functional/Non-functional Requirements, UX Flow, UI Components, Backend Design, Database, APIs, WebSocket Events, Configuration, Test Plan, Manual QA, Claude Code Prompt, Definition of Done) — sections are largely unfilled placeholders (`(TODO)`) and need to be fleshed out with real requirements before/while a given feature is implemented.
-- **`docs/features/`** — numbered, sequential feature specs (001 through 050) intended to be implemented roughly in order, each building on the previous ones without breaking them. Recurring constraints: must run on Raspberry Pi/Linux/Windows/Docker, support dark and light themes, require no paid services, and be independently testable. `001_Project_Setup.md` is filled in and done; `002`–`009` have a Status note reconciling them against what 001 already delivered (some fully done, some partially, some not started — check before implementing); `010` onward are still untouched template stubs.
-- **`docs/architecture/`** — filled in for what's actually implemented: `01_SYSTEM_ARCHITECTURE`, `02_REPOSITORY_STRUCTURE`, `04_API_GUIDELINES`, `06_SECURITY`, `07_DEPLOYMENT`, `08_TESTING_STRATEGY`, `09_UI_DESIGN_SYSTEM` all describe real, current behavior (each also lists what's still a gap). `03_DATABASE_DESIGN` and `05_PLUGIN_SDK` are still one-line stubs — nothing to document until models/plugins exist.
+- **`docs/features/`** — numbered, sequential feature specs (001 through 050) intended to be implemented roughly in order, each building on the previous ones without breaking them. Recurring constraints: must run on Raspberry Pi/Linux/Windows/Docker, support dark and light themes, require no paid services, and be independently testable. `001_Project_Setup.md` is filled in and done; `002`–`009` have a Status note reconciling them against what 001 already delivered (some fully done, some partially, some not started — check before implementing); `010_Plugin_Framework` is done and implemented (see BACKLOG.md); `011` onward are still untouched template stubs.
+- **`docs/architecture/`** — filled in for what's actually implemented: `01_SYSTEM_ARCHITECTURE`, `02_REPOSITORY_STRUCTURE`, `04_API_GUIDELINES`, `06_SECURITY`, `07_DEPLOYMENT`, `08_TESTING_STRATEGY`, `09_UI_DESIGN_SYSTEM`, `05_PLUGIN_SDK` all describe real, current behavior (each also lists what's still a gap). `03_DATABASE_DESIGN` is still a one-line stub — nothing to document until models exist.
 - **`docs/guides/`** — `Setup_Guide.md`, `Developer_Guide.md`, `Coding_Standards.md`, and `Git_Workflow.md` are filled in and real. `Prompt_Usage.md` and `Release_Process.md` are still stubs — nothing has been decided for those yet; don't invent a policy in them.
 
 ## Recurring constraints across specs

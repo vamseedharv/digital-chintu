@@ -20,9 +20,15 @@ services:
       WAKE_WORD: ${WAKE_WORD:-Hey Chintu}
       DEFAULT_THEME: ${DEFAULT_THEME:-system}
       DEFAULT_LANGUAGE: ${DEFAULT_LANGUAGE:-en-US}
+      PLUGINS_DIR: /app/plugins
+      ENABLED_PLUGINS: ${ENABLED_PLUGINS:-}
     volumes:
       - backend-data:/app/data
       - backend-logs:/app/logs
+      # Bind mount (not a named volume): plugins are host-authored files an
+      # operator drops in, not container-owned state — see
+      # docs/architecture/05_PLUGIN_SDK.md's "Cross-platform / Docker".
+      - ./plugins:/app/plugins:ro
     ports:
       - "${BACKEND_PORT:-8000}:8000"
     restart: unless-stopped

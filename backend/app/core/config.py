@@ -55,6 +55,18 @@ class Settings(BaseSettings):
     default_theme: Theme = Theme.SYSTEM
     default_language: str = "en-US"
 
+    # Plugin extension point (docs/architecture/05_PLUGIN_SDK.md). Relative
+    # paths resolve against the process's working directory, same as log_dir
+    # — the default matches running `uvicorn` from `backend/` (native dev),
+    # landing on the repo-root `plugins/`. Docker overrides both to absolute
+    # container paths, same pattern as DATABASE_URL.
+    plugins_dir: str = "../plugins"
+    # Comma-separated allow-list of plugin slugs. Empty/unset means "every
+    # discovered plugin is enabled" — deliberately not deny-by-default like
+    # CORS_ORIGINS, since reaching PLUGINS_DIR already requires deployment
+    # access. See 05_PLUGIN_SDK.md's "Enabling / disabling".
+    enabled_plugins: str = ""
+
     @field_validator("app_name", "wake_word")
     @classmethod
     def _not_blank(cls, value: str, info: ValidationInfo) -> str:
@@ -84,6 +96,14 @@ class Settings(BaseSettings):
     @property
     def cors_origins_list(self) -> list[str]:
         return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
+
+    @property
+    def enabled_plugins_set(self) -> set[str] | None:
+        """`None` means "all discovered plugins enabled" (the default) —
+        see docs/architecture/05_PLUGIN_SDK.md's "Enabling / disabling"."""
+        if not self.enabled_plugins.strip():
+            return None
+        return {slug.strip() for slug in self.enabled_plugins.split(",") if slug.strip()}
 
 
 @lru_cache

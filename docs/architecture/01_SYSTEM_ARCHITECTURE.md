@@ -26,7 +26,7 @@ backend (FastAPI)
   SQLite file (single file, no migrations yet)
 
 frontend-mobile   -- placeholder only, framework not chosen (see its README)
-plugins           -- placeholder only, plugin engine not started
+plugins           -- extension point implemented (core/plugins.py); no real plugin dropped in yet
 WebSocket API     -- not registered yet; add under api/v1/ when a feature needs push updates
 ```
 
@@ -41,7 +41,7 @@ it (no compiled/CI-enforced boundary yet — see "Known gaps" below):
 | Layer | Path | Today |
 |---|---|---|
 | HTTP interface | `api/v1/` | `router.py` aggregates endpoint routers: `endpoints/health.py` (liveness) and `endpoints/config.py` (read-only runtime configuration) |
-| Cross-cutting | `core/` | `config.py` (pydantic-settings, env-driven), `logging.py` (console + rotating file handler), `scheduler.py` (APScheduler instance, started/stopped via the app's lifespan, no jobs registered yet) |
+| Cross-cutting | `core/` | `config.py` (pydantic-settings, env-driven), `logging.py` (console + rotating file handler), `scheduler.py` (APScheduler instance, started/stopped via the app's lifespan, no jobs registered yet), `plugins.py` (discovery, `Plugin` contract, dynamic router registration — see [05_PLUGIN_SDK.md](05_PLUGIN_SDK.md)) |
 | Application logic | `services/` | Empty — no feature has needed business logic yet |
 | Data access | `repositories/` | Empty — no feature has needed persistence yet |
 | Domain | `domain/` | Empty — no entities defined yet |
@@ -131,10 +131,12 @@ its own DB-backed override on top of these env-driven defaults).
   importing `src/components`, `src/routes`, or `src/app` — the direction
   those UI layers already depended on by convention, now enforced in
   `make lint`.
-- Plugin engine (`plugins/`) and mobile client (`frontend-mobile/`) are
-  reserved paths only — see their own `README.md`. See
-  [BACKLOG.md](../../BACKLOG.md) for what a plugin extension point needs
-  before `010_Plugin_Framework` can start.
+- Plugin engine — **closed**: `backend/app/core/plugins.py` provides
+  discovery, the `Plugin` contract, and dynamic router registration (see
+  [05_PLUGIN_SDK.md](05_PLUGIN_SDK.md)); `plugins/` itself still has no
+  real plugin dropped into it.
+- Mobile client (`frontend-mobile/`) is a reserved path only — see its own
+  `README.md`.
 
 ## Cross-platform
 

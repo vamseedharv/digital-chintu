@@ -32,6 +32,36 @@ wake-word engine, an AI router, or reminders themselves). See
 `docs/features/008_Settings.md`, `009_Assistant_Onboarding.md`, and
 `011_Wake_Word.md` for what's still open on top of this.
 
+- Plugin framework (`backend/app/core/plugins.py`, `010_Plugin_Framework`):
+  filesystem-based discovery under a new `PLUGINS_DIR` setting (each
+  `<name>/plugin.py` exposing a module-level `plugin: Plugin` instance), a
+  `Plugin` contract (`PluginMetadata` + optional router/`on_startup`/
+  `on_shutdown`), and dynamic router registration mounting each enabled
+  plugin at `/api/v1/plugins/{slug}` — no more hand-editing
+  `api/v1/router.py` to add a plugin. See
+  `docs/architecture/05_PLUGIN_SDK.md` for the full contract (trust model,
+  discovery, versioning, fail-fast vs. fail-soft handling).
+- New `ENABLED_PLUGINS` setting: a comma-separated allow-list of plugin
+  slugs; empty/unset enables every discovered plugin (deliberately not
+  deny-by-default like `CORS_ORIGINS` — see 05_PLUGIN_SDK.md's "Enabling /
+  disabling").
+- `GET /api/v1/plugins`: read-only list of discovered plugins (slug, name,
+  version, enabled state).
+- `docker-compose.yml`: read-only bind mount (`./plugins:/app/plugins:ro`)
+  so plugins dropped into the host's `plugins/` are picked up without an
+  image rebuild.
+- Backend tests: 13 new unit tests (`tests/unit/test_plugins.py`) covering
+  discovery, duplicate-slug failure, broken/invalid plugins being skipped,
+  and version/allow-list gating; 10 new integration tests
+  (`tests/integration/test_plugins_api.py`) covering the endpoint, mounted
+  routing, a broken plugin not blocking startup, and lifespan startup/
+  shutdown hooks including failure isolation.
+
+No real plugin exists yet — this is the extension point only. See
+`docs/features/010_Plugin_Framework.md` (Status: Done) and
+`docs/features/041_Home_Assistant.md`/`042_Device_Control.md` for what's
+still open on top of this.
+
 ## [0.2.0] - 2026-07-09
 
 **Foundation frozen.** UI Framework built, then reviewed twice (a UI-specific

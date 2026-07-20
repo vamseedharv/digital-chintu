@@ -21,7 +21,7 @@ infrastructure that those features will be built on; Phase 1
 
 | Area | State |
 |---|---|
-| Backend | FastAPI app factory, Clean Architecture layer folders (`api/core/domain/services/repositories/db`), typed/validated env-driven config (assistant name, wake word, theme, language, dev/prod profiles — see `docs/architecture/01_SYSTEM_ARCHITECTURE.md`), structured logging, APScheduler (wired, no jobs), two endpoints (`/api/v1/health`, `/api/v1/config`) — the latter two added since the `v0.2.0` freeze, not yet part of a tagged release |
+| Backend | FastAPI app factory, Clean Architecture layer folders (`api/core/domain/services/repositories/db`), typed/validated env-driven config (assistant name, wake word, theme, language, dev/prod profiles — see `docs/architecture/01_SYSTEM_ARCHITECTURE.md`), structured logging, APScheduler (wired, no jobs), a plugin extension point (discovery/interface/dynamic router registration, no real plugin yet — `docs/architecture/05_PLUGIN_SDK.md`), three endpoints (`/api/v1/health`, `/api/v1/config`, `/api/v1/plugins`) — all added since the `v0.2.0` freeze, not yet part of a tagged release |
 | Frontend | React + TypeScript + Vite + Tailwind v4 — application shell (`app/`: `AppShell`, router, nav), routed pages (`routes/`: home, 404, error), a reusable component library (`components/ui/`, `components/layout/`), dark/light theme (persisted) |
 | Database | SQLite, SQLAlchemy engine/session scaffolding — **no models, no migrations** |
 | Docker | Both services containerized, multi-arch, healthchecked, resource-limited, wired via `docker-compose.yml` |
@@ -56,8 +56,9 @@ practice). See
 
 ## Known limitations (see BACKLOG.md for the full, prioritized list)
 
-- No plugin discovery mechanism or interface exists yet — `plugins/` is a
-  reserved directory name only.
+- Plugin discovery/interface/registration exists (`backend/app/core/plugins.py`,
+  `010_Plugin_Framework`), but no real plugin has been built yet —
+  `plugins/` has no subdirectories.
 - No task scheduler jobs registered (APScheduler is wired but idle).
 - No database models/migrations (Alembic not yet introduced — correctly
   deferred until the first model).
