@@ -1,9 +1,9 @@
 """Read/write runtime settings — a DB-backed override layer on top of the
 env-driven defaults in app.core.config.Settings. `app_name`, `default_theme`,
-`onboarding_complete`, and `wake_word_enabled` are managed here today
-(`wake_word` itself is read-only/derived, not independently overridable —
-see docs/features/011_Wake_Word.md); see docs/features/008_Settings.md for
-what's deliberately out of scope."""
+`onboarding_complete`, `wake_word_enabled`, and `stt_enabled` are managed
+here today (`wake_word` itself is read-only/derived, not independently
+overridable — see docs/features/011_Wake_Word.md); see
+docs/features/008_Settings.md for what's deliberately out of scope."""
 
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel, field_validator
@@ -25,6 +25,7 @@ class SettingsResponse(BaseModel):
     # docs/features/011_Wake_Word.md.
     wake_word: str
     wake_word_enabled: bool
+    stt_enabled: bool
 
 
 class SettingsUpdate(BaseModel):
@@ -36,6 +37,7 @@ class SettingsUpdate(BaseModel):
     default_theme: Theme | None = None
     onboarding_complete: bool | None = None
     wake_word_enabled: bool | None = None
+    stt_enabled: bool | None = None
 
     @field_validator("app_name")
     @classmethod
@@ -50,6 +52,7 @@ def _to_response(effective: EffectiveSettings) -> SettingsResponse:
         onboarding_complete=effective.onboarding_complete,
         wake_word=effective.wake_word,
         wake_word_enabled=effective.wake_word_enabled,
+        stt_enabled=effective.stt_enabled,
     )
 
 
@@ -73,5 +76,7 @@ def update_settings_endpoint(
         service.update_onboarding_complete(update.onboarding_complete)
     if update.wake_word_enabled is not None:
         service.update_wake_word_enabled(update.wake_word_enabled)
+    if update.stt_enabled is not None:
+        service.update_stt_enabled(update.stt_enabled)
 
     return _to_response(service.get_effective_settings())

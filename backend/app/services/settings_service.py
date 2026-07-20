@@ -29,10 +29,10 @@ class SettingsService:
         # wins if set, otherwise it's derived from the (possibly
         # DB-overridden) app_name — see docs/features/011_Wake_Word.md.
         wake_word = defaults.wake_word or f"Hey {app_name}"
-        wake_word_enabled_override = overrides.get(SettingKey.WAKE_WORD_ENABLED)
-        wake_word_enabled = (
-            wake_word_enabled_override == "true" if wake_word_enabled_override is not None else True
+        wake_word_enabled = self._bool_override(
+            overrides, SettingKey.WAKE_WORD_ENABLED, default=True
         )
+        stt_enabled = self._bool_override(overrides, SettingKey.STT_ENABLED, default=True)
 
         return EffectiveSettings(
             app_name=app_name,
@@ -40,7 +40,13 @@ class SettingsService:
             onboarding_complete=onboarding_complete,
             wake_word=wake_word,
             wake_word_enabled=wake_word_enabled,
+            stt_enabled=stt_enabled,
         )
+
+    @staticmethod
+    def _bool_override(overrides: dict[str, str], key: SettingKey, *, default: bool) -> bool:
+        override = overrides.get(key)
+        return override == "true" if override is not None else default
 
     def update_app_name(self, value: str) -> None:
         validated = validate_short_text(value, "app_name")
@@ -54,3 +60,6 @@ class SettingsService:
 
     def update_wake_word_enabled(self, value: bool) -> None:
         self._repository.set(SettingKey.WAKE_WORD_ENABLED, "true" if value else "false")
+
+    def update_stt_enabled(self, value: bool) -> None:
+        self._repository.set(SettingKey.STT_ENABLED, "true" if value else "false")

@@ -31,6 +31,8 @@ services:
       WAKE_WORD_SENSITIVITY: ${WAKE_WORD_SENSITIVITY:-0.5}
       WAKE_WORD_PREROLL_SECONDS: ${WAKE_WORD_PREROLL_SECONDS:-1.0}
       VOICE_AUDIO_DEVICE: ${VOICE_AUDIO_DEVICE:-}
+      STT_MODEL: ${STT_MODEL:-tiny.en}
+      STT_UTTERANCE_SECONDS: ${STT_UTTERANCE_SECONDS:-5.0}
     volumes:
       - backend-data:/app/data
       - backend-logs:/app/logs

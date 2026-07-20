@@ -75,6 +75,18 @@ class Settings(BaseSettings):
     # Empty string means "use the system's default audio input device."
     voice_audio_device: str = ""
 
+    # Speech-to-text (docs/features/012_Speech_To_Text.md). Also an opt-in
+    # `voice` extra (whisper.cpp via pywhispercpp), also env-only/deployment
+    # -level. "tiny.en" is the default deliberately, not "base"/"small": it's
+    # the only size that fits comfortably inside docker-compose.yml's
+    # existing 512m backend mem_limit (~273MB RAM) alongside the rest of the
+    # app; "base" (~388MB) is tight, "small" (~852MB) doesn't fit at all
+    # without raising that limit — see 07_DEPLOYMENT.md's "Speech-to-Text"
+    # section for the full accuracy-vs-Pi-feasibility trade-off.
+    stt_model: str = "tiny.en"
+    # How long to record after a wake event before transcribing.
+    stt_utterance_seconds: float = Field(default=5.0, ge=1.0, le=30.0)
+
     # Plugin extension point (docs/architecture/05_PLUGIN_SDK.md). Relative
     # paths resolve against the process's working directory, same as log_dir
     # — the default matches running `uvicorn` from `backend/` (native dev),
@@ -87,7 +99,7 @@ class Settings(BaseSettings):
     # access. See 05_PLUGIN_SDK.md's "Enabling / disabling".
     enabled_plugins: str = ""
 
-    @field_validator("app_name", "wake_word_model")
+    @field_validator("app_name", "wake_word_model", "stt_model")
     @classmethod
     def _not_blank(cls, value: str, info: ValidationInfo) -> str:
         return validate_short_text(value, info.field_name or "value")

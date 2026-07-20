@@ -76,16 +76,19 @@ static file server. Set `DEBUG=false` and `APP_ENV=production` in
 matters if you're relying on a `.env` file at all; see
 [06_SECURITY.md](06_SECURITY.md).
 
-## Voice / Wake Word
+## Voice / Wake Word & Speech-to-Text
 
-`011_Wake_Word` (`backend/app/core/voice/`) integrates
-[OpenWakeWord](https://github.com/dscripka/openWakeWord) as an **opt-in**
-capability — `pip install '.[voice]'` (`openwakeword`, `onnxruntime`,
-`sounddevice`, `numpy`; see `backend/pyproject.toml`), never installed by
-default or in CI. Without it, the backend still boots and serves
-everything else; `GET /api/v1/wake-word/status` reports why detection is
-inactive, and `POST /api/v1/wake-word/trigger` (push-to-talk) always works
-regardless.
+`011_Wake_Word` and `012_Speech_To_Text` (`backend/app/core/voice/`)
+integrate [OpenWakeWord](https://github.com/dscripka/openWakeWord) and
+[whisper.cpp](https://github.com/ggml-org/whisper.cpp) (via `pywhispercpp`)
+as a single **opt-in** capability — `pip install '.[voice]'`
+(`openwakeword`, `onnxruntime`, `sounddevice`, `numpy`, `pywhispercpp`; see
+`backend/pyproject.toml`), never installed by default or in CI. Without it,
+the backend still boots and serves everything else;
+`GET /api/v1/wake-word/status` / `GET /api/v1/stt/status` report why
+detection/transcription are inactive, and `POST /api/v1/wake-word/trigger`
+(push-to-talk) always works regardless — it just won't produce a
+transcription if STT isn't available.
 
 **Resource footprint** — published/community numbers, not benchmarked on
 real hardware by this feature (no physical device was available; see
@@ -105,14 +108,42 @@ downloads them from GitHub releases on first real startup
 network access once; a fully air-gapped deployment needs to pre-stage the
 model files manually.
 
+### Speech-to-Text
+
+`012_Speech_To_Text` reuses the same audio format/capture code and the
+same "opt-in, fails soft" philosophy — see
+[docs/features/012_Speech_To_Text.md](../features/012_Speech_To_Text.md)
+for the full design rationale, including why STT doesn't require any
+changes to `011`'s wake-word code. Model sizing is the concrete Pi
+trade-off (source: whisper.cpp's own README, not measured on physical
+hardware by this feature):
+
+| Model | Disk | RAM | Fits the 512m backend `mem_limit` below? |
+|---|---|---|---|
+| tiny(.en) | 75 MiB | ~273 MB | Yes — **the default** (`STT_MODEL=tiny.en`) |
+| base(.en) | 142 MiB | ~388 MB | Tight — little headroom for the rest of the app |
+| small | 466 MiB | ~852 MB | No — exceeds the limit outright |
+| medium/large | 1.5-2.9 GiB | 2.1-3.9 GB | No — desktop/server hardware only |
+
+On a Raspberry Pi 4, `tiny` runs comfortably faster than real-time; `base`
+runs around real-time using 4 threads. Raise `docker-compose.yml`'s
+backend `mem_limit` (see below) before trying `base`/`small` — the default
+512m only has headroom for `tiny`. Whisper.cpp/its models are **MIT
+licensed** (unlike OpenWakeWord's CC-BY-NC-SA-4.0 models above) — no
+non-commercial restriction. Model files are likewise downloaded once on
+first real use, not bundled in the pip package — same one-time-network
+caveat as wake-word's models.
+
 **Docker**: the default image does **not** install the `voice` extra or
 `libportaudio2`, and `docker-compose.yml` doesn't bind-mount `/dev/snd` —
-real microphone capture from inside a container needs a Linux host with
-`/dev/snd` passed through and PortAudio installed in a custom image, and
-does **not** work through Docker Desktop on Windows/Mac at all (no host
-mic passthrough). For always-on listening, run the backend natively on the
+real microphone capture from inside a container (needed by both wake-word
+detection and STT's utterance capture) needs a Linux host with `/dev/snd`
+passed through and PortAudio installed in a custom image, and does **not**
+work through Docker Desktop on Windows/Mac at all (no host mic
+passthrough). For always-on listening, run the backend natively on the
 Pi/Linux box rather than in Docker; push-to-talk via the API is the
-portable fallback everywhere, including Docker.
+portable fallback everywhere, including Docker (though without a working
+mic, STT still can't produce a transcription from it).
 
 **Wake phrase vs. acoustic model**: OpenWakeWord ships six pretrained
 models (`alexa`, `hey_mycroft`, `hey_jarvis`, `hey_rhasspy`, plus two
@@ -129,6 +160,9 @@ full design rationale.
 - [Wake Word Detection on Raspberry Pi — Outspoken](https://outspoken.cloud/blog/raspberry-pi-wake-word-detection)
 - [rhasspy/wyoming-openwakeword#47](https://github.com/rhasspy/wyoming-openwakeword/issues/47), [#30](https://github.com/rhasspy/wyoming-openwakeword/issues/30)
 - [Installation and Setup — DeepWiki](https://deepwiki.com/dscripka/openWakeWord/2-installation-and-setup)
+- [ggml-org/whisper.cpp (GitHub)](https://github.com/ggml-org/whisper.cpp)
+- [absadiki/pywhispercpp (GitHub)](https://github.com/absadiki/pywhispercpp)
+- [Real-time transcription on Raspberry Pi 4 — whisper.cpp Discussion #166](https://github.com/ggml-org/whisper.cpp/discussions/166)
 
 ## Not yet implemented
 

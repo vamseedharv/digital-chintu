@@ -40,11 +40,11 @@ it (no compiled/CI-enforced boundary yet — see "Known gaps" below):
 
 | Layer | Path | Today |
 |---|---|---|
-| HTTP interface | `api/v1/` | `router.py` aggregates endpoint routers: `health.py` (liveness), `config.py` (read-only runtime configuration), `settings.py` (read/write settings), `plugins.py` (plugin introspection), `wake_word.py` (wake-word status + push-to-talk trigger). `deps.py` holds shared dependency providers (`get_settings_service`). |
-| Cross-cutting | `core/` | `config.py` (pydantic-settings, env-driven), `logging.py` (console + rotating file handler), `scheduler.py` (APScheduler instance, started/stopped via the app's lifespan, no jobs registered yet), `plugins.py` (discovery, `Plugin` contract, dynamic router registration — see [05_PLUGIN_SDK.md](05_PLUGIN_SDK.md)), `voice/` (`011_Wake_Word`: `events.py`/`audio.py`/`engine.py`/`runtime.py` — an opt-in OpenWakeWord integration that always degrades gracefully; see [docs/features/011_Wake_Word.md](../features/011_Wake_Word.md)), `validation.py` (small validators shared across Pydantic models) |
+| HTTP interface | `api/v1/` | `router.py` aggregates endpoint routers: `health.py` (liveness), `config.py` (read-only runtime configuration), `settings.py` (read/write settings), `plugins.py` (plugin introspection), `wake_word.py` (wake-word status + push-to-talk trigger), `stt.py` (speech-to-text status). `deps.py` holds shared dependency providers (`get_settings_service`). |
+| Cross-cutting | `core/` | `config.py` (pydantic-settings, env-driven), `logging.py` (console + rotating file handler), `scheduler.py` (APScheduler instance, started/stopped via the app's lifespan, no jobs registered yet), `plugins.py` (discovery, `Plugin` contract, dynamic router registration — see [05_PLUGIN_SDK.md](05_PLUGIN_SDK.md)), `voice/` — an opt-in local voice pipeline that always degrades gracefully: `011_Wake_Word`'s `events.py`/`audio.py`/`engine.py`/`runtime.py` (OpenWakeWord) and `012_Speech_To_Text`'s `stt_events.py`/`stt_engine.py`/`stt_runtime.py` (whisper.cpp, subscribes to `011`'s event bus without modifying it) — see [docs/features/011_Wake_Word.md](../features/011_Wake_Word.md)/[012_Speech_To_Text.md](../features/012_Speech_To_Text.md), `validation.py` (small validators shared across Pydantic models) |
 | Application logic | `services/` | `settings_service.py` — resolves each managed setting's effective value (DB override or env default) and validates new values (`008_Settings`) |
 | Data access | `repositories/` | `settings_repository.py` — plain key/value reads and writes against the `settings` table |
-| Domain | `domain/` | `settings.py` — `SettingKey` (`app_name`, `default_theme`, `onboarding_complete`, `wake_word_enabled`), `EffectiveSettings` |
+| Domain | `domain/` | `settings.py` — `SettingKey` (`app_name`, `default_theme`, `onboarding_complete`, `wake_word_enabled`, `stt_enabled`), `EffectiveSettings` |
 | Infrastructure | `db/` | `base.py` (SQLAlchemy `DeclarativeBase`), `session.py` (engine/session factory, `get_db()` FastAPI dependency), `models.py` (`SettingModel`) |
 
 The app factory (`app/main.py`) wires config, logging, CORS middleware, the
@@ -126,7 +126,8 @@ Settings today:
 | Wake phrase | `WAKE_WORD` | `str \| None` | Optional exact-phrase pin. Left unset (default), the *effective* value reported by `/config`/`/settings` is derived as `"Hey {app_name}"` instead — see [011_Wake_Word](../features/011_Wake_Word.md). Decoupled from *which acoustic model* listens (`WAKE_WORD_MODEL`, env-only — OpenWakeWord's pretrained models don't include arbitrary names). |
 | Default theme | `DEFAULT_THEME` | `Theme` enum (`light`/`dark`/`system`) | The system-wide default before any per-user override. **Now writable at runtime** via `PATCH /api/v1/settings` — but the frontend's `ThemeProvider` doesn't consume it yet (only `localStorage`/OS preference), a known gap tracked in [BACKLOG.md](../../BACKLOG.md). |
 | Default language | `DEFAULT_LANGUAGE` | `str` | Validated as a BCP-47-style tag (`en`, `en-US`, `hi-IN`) — format only, no actual translation/i18n yet ([032_Multilingual](../features/032_Multilingual.md)). Env-only; not managed by 008_Settings. |
-| Wake-word model, sensitivity, pre-roll, audio device | `WAKE_WORD_MODEL`, `WAKE_WORD_SENSITIVITY`, `WAKE_WORD_PREROLL_SECONDS`, `VOICE_AUDIO_DEVICE` | see `.env.example` | Deployment-level knobs for `011_Wake_Word`'s opt-in detection engine — env-only, same tier as `PLUGINS_DIR`. |
+| Wake-word model, sensitivity, pre-roll, audio device | `WAKE_WORD_MODEL`, `WAKE_WORD_SENSITIVITY`, `WAKE_WORD_PREROLL_SECONDS`, `VOICE_AUDIO_DEVICE` | see `.env.example` | Deployment-level knobs for `011_Wake_Word`'s opt-in detection engine — env-only, same tier as `PLUGINS_DIR`. `VOICE_AUDIO_DEVICE` is shared with STT below. |
+| STT model, utterance length | `STT_MODEL`, `STT_UTTERANCE_SECONDS` | see `.env.example` | Deployment-level knobs for `012_Speech_To_Text`'s opt-in whisper.cpp engine — env-only, same tier as the wake-word knobs. `STT_MODEL` defaults to `tiny.en`, the only size that fits `docker-compose.yml`'s 512m backend memory limit — see [07_DEPLOYMENT.md](07_DEPLOYMENT.md#speech-to-text). |
 | CORS origins, log level/dir, DB URL, API prefix | see `.env.example` | — | Unchanged infrastructure settings. |
 
 `GET /api/v1/config` exposes the non-secret subset of the above (app name,
@@ -138,15 +139,17 @@ purely env-driven. `GET`/`PATCH /api/v1/settings` (`008_Settings`) is the
 dedicated read/write surface for the managed settings — see
 [03_DATABASE_DESIGN.md](03_DATABASE_DESIGN.md).
 
-The settings domain also manages two keys with no env-var counterpart at
+The settings domain also manages three keys with no env-var counterpart at
 all: `onboarding_complete` (`009_Assistant_Onboarding`), a bool defaulting
-to `false` until explicitly set, and `wake_word_enabled`
-(`011_Wake_Word`), a bool defaulting to `true` gating the wake-word
-runtime's always-on listening (read once at startup, not hot-reloaded —
-see `docs/features/011_Wake_Word.md`). Neither is in the table above
-because there's no "env-driven default" concept for either, only the DB
-override. `GET /api/v1/config`/`GET /api/v1/health` don't expose either
-(only `GET /api/v1/settings` does); `onboarding_complete` is read purely by
+to `false` until explicitly set; `wake_word_enabled` (`011_Wake_Word`); and
+`stt_enabled` (`012_Speech_To_Text`) — the latter two both bools defaulting
+to `true`, independently gating the wake-word and STT runtimes' startup
+(read once at startup, not hot-reloaded — see
+`docs/features/011_Wake_Word.md`/`012_Speech_To_Text.md`). None of the
+three is in the table above because there's no "env-driven default"
+concept for any of them, only the DB override.
+`GET /api/v1/config`/`GET /api/v1/health` don't expose any of them (only
+`GET /api/v1/settings` does); `onboarding_complete` is read purely by
 `AppShell`'s onboarding-redirect gate.
 
 ## Known gaps (intentional, tracked for later features)

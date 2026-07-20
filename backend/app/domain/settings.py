@@ -20,6 +20,7 @@ class SettingKey(StrEnum):
     DEFAULT_THEME = "default_theme"
     ONBOARDING_COMPLETE = "onboarding_complete"
     WAKE_WORD_ENABLED = "wake_word_enabled"
+    STT_ENABLED = "stt_enabled"
 
 
 @dataclass(frozen=True)
@@ -31,10 +32,13 @@ class EffectiveSettings:
     `wake_word` has no override of its own — it's derived from `app_name`
     (or the `WAKE_WORD` env pin, if set) by `SettingsService`, not persisted;
     `wake_word_enabled` defaults to `True` and is the on/off toggle for
-    always-on listening (see docs/features/011_Wake_Word.md)."""
+    always-on listening (see docs/features/011_Wake_Word.md). `stt_enabled`
+    is the same pattern for speech-to-text (see
+    docs/features/012_Speech_To_Text.md), also defaulting to `True`."""
 
     app_name: str
     default_theme: Theme
     onboarding_complete: bool
     wake_word: str
     wake_word_enabled: bool
+    stt_enabled: bool

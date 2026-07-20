@@ -14,6 +14,7 @@ from app.core.logging import configure_logging
 from app.core.plugins import DiscoveredPlugin, discover_plugins, register_plugins
 from app.core.scheduler import scheduler
 from app.core.voice.runtime import WakeWordRuntime
+from app.core.voice.stt_runtime import SttRuntime
 from app.db.session import get_db
 from app.repositories.settings_repository import SettingsRepository
 from app.services.settings_service import SettingsService
@@ -34,18 +35,30 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
             logger.exception("Plugin '%s' failed to start up", item.plugin.metadata.slug)
 
     wake_word_runtime: WakeWordRuntime = app.state.wake_word_runtime
+    stt_runtime: SttRuntime = app.state.stt_runtime
     try:
         # Resolve via whatever get_db dependency is currently installed
         # (respects test overrides — see tests/conftest.py's make_test_client
         # — rather than always hitting the real configured database).
         db_dependency = app.dependency_overrides.get(get_db, get_db)
         with contextmanager(db_dependency)() as db:
-            wake_word_enabled = (
-                SettingsService(SettingsRepository(db)).get_effective_settings().wake_word_enabled
-            )
-        await wake_word_runtime.start(enabled=wake_word_enabled)
+            effective_settings = SettingsService(SettingsRepository(db)).get_effective_settings()
+    except Exception:
+        logger.exception("Failed to resolve voice-pipeline settings; leaving both disabled")
+        effective_settings = None
+
+    try:
+        await wake_word_runtime.start(
+            enabled=effective_settings.wake_word_enabled if effective_settings else False
+        )
     except Exception:
         logger.exception("Wake-word runtime failed to start")
+
+    try:
+        stt_enabled = effective_settings.stt_enabled if effective_settings else False
+        await stt_runtime.start(enabled=stt_enabled)
+    except Exception:
+        logger.exception("STT runtime failed to start")
 
     try:
         yield
@@ -57,6 +70,10 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
                 await item.plugin.on_shutdown()
             except Exception:
                 logger.exception("Plugin '%s' failed to shut down", item.plugin.metadata.slug)
+        try:
+            await stt_runtime.stop()
+        except Exception:
+            logger.exception("STT runtime failed to stop")
         try:
             await wake_word_runtime.stop()
         except Exception:
@@ -85,12 +102,17 @@ def create_app() -> FastAPI:
 
     # No DB access here — dependency overrides (see tests/conftest.py) aren't
     # installed until after create_app() returns, so the DB-backed
-    # wake_word_enabled toggle is resolved later, in lifespan(). Constructing
-    # the runtime itself needs no DB and is always safe.
+    # wake_word_enabled/stt_enabled toggles are resolved later, in
+    # lifespan(). Constructing these runtimes needs no DB and is always safe.
     app.state.wake_word_runtime = WakeWordRuntime(
         model_name=settings.wake_word_model,
         sensitivity=settings.wake_word_sensitivity,
         preroll_seconds=settings.wake_word_preroll_seconds,
+        audio_device=settings.voice_audio_device,
+    )
+    app.state.stt_runtime = SttRuntime(
+        model_name=settings.stt_model,
+        utterance_seconds=settings.stt_utterance_seconds,
         audio_device=settings.voice_audio_device,
     )
 

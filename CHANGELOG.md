@@ -9,6 +9,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Speech-to-text (`backend/app/core/voice/stt_*.py`, `012_Speech_To_Text`):
+  an **opt-in** whisper.cpp integration (`pywhispercpp`, added to the same
+  `voice` extras group `011_Wake_Word` introduced) that subscribes to
+  `011`'s `wake_word_events` bus with **no changes to `011`'s code** —
+  `SttRuntime` opens a fresh microphone capture after any wake event
+  (audio-triggered or push-to-talk), transcribes it off the event loop, and
+  publishes a `TranscriptionEvent` (carrying the text and the triggering
+  `WakeWordEvent`) via a new `transcription_events` bus —
+  `015_Intent_Router`'s future integration point. Degrades gracefully
+  (missing dependency, missing model, missing mic, or a mid-transcription
+  crash) the same way `011` does; a capture in progress causes overlapping
+  wake events to be dropped rather than queued or run concurrently (a real
+  race condition — an early implementation set the "capturing" flag from
+  inside the background task instead of synchronously in the callback,
+  letting two rapid wake events both start a capture — fixed and covered by
+  a dedicated test).
+- Model sizing trade-off documented in `docs/architecture/07_DEPLOYMENT.md`:
+  `STT_MODEL` defaults to `tiny.en` (~273MB RAM) — the only whisper.cpp size
+  that fits inside `docker-compose.yml`'s existing 512m backend
+  `mem_limit`; `base`/`small` are more accurate but need a raised limit,
+  cited from whisper.cpp's own README, not benchmarked on physical Pi
+  hardware (none was available this session, same honesty standard `011`
+  set). whisper.cpp/its models are MIT-licensed — no non-commercial
+  restriction, unlike `011`'s OpenWakeWord models.
+- New `stt_enabled` DB-managed setting (`008_Settings` pattern, default
+  `true`), independent of `wake_word_enabled` — an operator can run
+  always-on wake detection without STT, or STT-only via push-to-talk.
+- `GET /api/v1/stt/status` — no dedicated trigger endpoint: STT is driven
+  purely by `POST /api/v1/wake-word/trigger`, since `SttRuntime` just
+  subscribes to the bus that endpoint already publishes to.
+- `tests/fixtures/sample_utterance.wav`: a synthetic (not real speech),
+  checked-in 16kHz mono WAV fixture, satisfying "recorded sample audio
+  fixtures, no live mic dependency in CI" — tests feed its frames through a
+  fake STT engine to exercise the real audio-loading/framing/WAV-writing
+  code paths without needing pywhispercpp or a microphone.
+- Backend tests: `tests/unit/test_stt_events.py`, `test_stt_engine.py`
+  (the WAV-writer helper, pure stdlib), `test_stt_runtime.py` (fixture-
+  driven fakes; one test exercises the real `ImportError` fail-soft path
+  since pywhispercpp is genuinely absent in CI), `tests/integration/test_stt_api.py`.
+  Existing settings tests updated for the new response field.
+
+No intent routing (`015`, not started) — this is the second voice-pipeline
+stage only. See `docs/features/012_Speech_To_Text.md` (Status: Done).
+
 - Wake-word detection (`backend/app/core/voice/`, `011_Wake_Word`): an
   **opt-in** OpenWakeWord integration (`pip install '.[voice]'` —
   `openwakeword`, `onnxruntime`, `sounddevice`, `numpy` — deliberately not

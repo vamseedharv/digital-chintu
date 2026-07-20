@@ -26,11 +26,12 @@ dev = [
     "mypy>=1.11,<2.0",
     "import-linter>=2.0,<3.0",
 ]
-# Wake-word detection (docs/features/011_Wake_Word.md) — deliberately NOT a
-# base dependency. openwakeword/onnxruntime aren't guaranteed to have
-# prebuilt wheels on every Raspberry Pi architecture, and sounddevice needs
-# a native PortAudio library that doesn't exist in Docker/CI at all. The
-# backend must boot and stay healthy with this group absent (see
+# Local voice pipeline (wake-word: docs/features/011_Wake_Word.md; speech-
+# to-text: docs/features/012_Speech_To_Text.md) — deliberately NOT a base
+# dependency. openwakeword/onnxruntime/pywhispercpp aren't guaranteed to
+# have prebuilt wheels on every Raspberry Pi architecture, and sounddevice
+# needs a native PortAudio library that doesn't exist in Docker/CI at all.
+# The backend must boot and stay healthy with this group absent (see
 # app/core/voice/) — install with `pip install '.[voice]'` on hardware
 # that's been checked against docs/architecture/07_DEPLOYMENT.md's resource
 # notes first.
@@ -39,6 +40,7 @@ voice = [
     "onnxruntime>=1.18,<2.0",
     "sounddevice>=0.5,<1.0",
     "numpy>=1.26,<3.0",
+    "pywhispercpp>=1.2,<2.0",
 ]
 
 [build-system]
