@@ -12,30 +12,34 @@ frontend skeletons (now including a full application shell — routing,
 sidebar/drawer nav, a small reusable component library), Docker, CI, and dev
 tooling all exist, are tested, and have passed two review passes (a
 UI-specific review and a full architecture review) with every approved,
-non-feature finding fixed. **No product feature has been built yet** — no
-reminders, voice, AI, plugins, or media integrations. Everything below is
-infrastructure that those features will be built on; Phase 1
-(`010_Plugin_Framework`, see [ROADMAP.md](ROADMAP.md)) is next.
+non-feature finding fixed. Since that freeze (all still unreleased): the
+plugin extension point (`010_Plugin_Framework`) and **the first real
+product screen**, the Dashboard (`007_Dashboard`) — a widget-hosting home
+screen (greeting, clock, the existing health check, placeholder tiles for
+Weather/Reminders/To-do/Shopping List). No reminders, voice, AI, or media
+integrations exist yet, and no real plugin has been built on top of the
+extension point. Phase 1 (Plugin Framework) is done; Phase 2 (Voice
+Pipeline) is next per [ROADMAP.md](ROADMAP.md).
 
 ## What exists today
 
 | Area | State |
 |---|---|
 | Backend | FastAPI app factory, Clean Architecture layer folders (`api/core/domain/services/repositories/db`), typed/validated env-driven config (assistant name, wake word, theme, language, dev/prod profiles — see `docs/architecture/01_SYSTEM_ARCHITECTURE.md`), structured logging, APScheduler (wired, no jobs), a plugin extension point (discovery/interface/dynamic router registration, no real plugin yet — `docs/architecture/05_PLUGIN_SDK.md`), three endpoints (`/api/v1/health`, `/api/v1/config`, `/api/v1/plugins`) — all added since the `v0.2.0` freeze, not yet part of a tagged release |
-| Frontend | React + TypeScript + Vite + Tailwind v4 — application shell (`app/`: `AppShell`, router, nav), routed pages (`routes/`: home, 404, error), a reusable component library (`components/ui/`, `components/layout/`), dark/light theme (persisted) |
+| Frontend | React + TypeScript + Vite + Tailwind v4 — application shell (`app/`: `AppShell`, router, nav), routed pages (`routes/`: **dashboard** (widget grid: greeting, clock, health check, placeholder tiles — `components/dashboard/`), 404, error), a reusable component library (`components/ui/`, `components/layout/`), dark/light theme (persisted) |
 | Database | SQLite, SQLAlchemy engine/session scaffolding — **no models, no migrations** |
 | Docker | Both services containerized, multi-arch, healthchecked, resource-limited, wired via `docker-compose.yml` |
 | CI | GitHub Actions: backend (Linux+Windows), frontend (Linux) — lint, type-check, `import-linter` (backend) + `import/no-restricted-paths` (frontend), tests |
-| Tests | 21 backend (unit+integration) + 58 frontend (unit+integration, 20 files) + 4 E2E — all passing |
+| Tests | 67 backend (unit+integration) + 81 frontend (unit+integration) + 5 E2E — all passing, all added/grown since the `v0.2.0` freeze |
 | Docs | Architecture docs (`docs/architecture/`) and guides (`docs/guides/`) filled in for what's actually implemented; `CONTRIBUTING.md`/`DEVELOPMENT.md` now exist at the repo root |
 
 ## Test coverage
 
 | Package | Tests | Statements | Branches | Functions | Lines |
 |---|---|---|---|---|---|
-| Backend (Pytest) | 21 | 97% | — | — | — |
-| Frontend (Vitest) | 58 | 98.21% | 97.4% | 100% | 100% |
-| E2E (Playwright) | 4 | n/a | n/a | n/a | n/a |
+| Backend (Pytest) | 67 | 98% | — | — | — |
+| Frontend (Vitest) | 81 | 98.59% | 97.7% | 100% | 100% |
+| E2E (Playwright) | 5 | n/a | n/a | n/a | n/a |
 
 Remaining gaps are deliberate, not overlooked: `backend/app/db/base.py`'s
 empty `DeclarativeBase` (nothing to test until models exist),

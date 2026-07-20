@@ -44,12 +44,14 @@ export default tseslint.config(
             {
               target: './src/api',
               from: ['./src/components', './src/routes', './src/app'],
-              message: 'src/api must not depend on components/routes/app — it is a lower-level layer they depend on.',
+              message:
+                'src/api must not depend on components/routes/app — it is a lower-level layer they depend on.',
             },
             {
               target: './src/theme',
               from: ['./src/components', './src/routes', './src/app'],
-              message: 'src/theme must not depend on components/routes/app — it is a lower-level layer they depend on.',
+              message:
+                'src/theme must not depend on components/routes/app — it is a lower-level layer they depend on.',
             },
           ],
         },

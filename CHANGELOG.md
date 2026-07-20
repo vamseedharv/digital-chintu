@@ -62,6 +62,31 @@ No real plugin exists yet — this is the extension point only. See
 `docs/features/041_Home_Assistant.md`/`042_Device_Control.md` for what's
 still open on top of this.
 
+- Dashboard (`007_Dashboard`): the home route (`/`) is now a real
+  widget-hosting screen instead of the diagnostic-only page it was.
+  `components/dashboard/`: `WidgetCard` (shared glass-card + icon + `<h2>`
+  shell every tile widget renders through), `GreetingWidget` (time-of-day
+  greeting, names the configured assistant, re-evaluates every 60s),
+  `ClockWidget` (live local time/date, updates every second), and
+  `PlaceholderWidget` (generic "Coming soon" tile, reused for Weather/
+  Reminders/To-do/Shopping List until each has a real feature). The
+  existing `HealthStatus` check is unchanged, now one grid tile among
+  several rather than the whole page. No new backend endpoint — reuses
+  the already-fetched `app_name` and the existing `/api/v1/health` check;
+  see `docs/SDS/01_UI/012_Dashboard.md`'s "Backend Design" for why a
+  server-driven layout isn't built yet.
+- `components/layout/PageContainer.tsx`: widened `max-w-2xl` → `max-w-5xl`
+  so a multi-column widget grid has room; affects every page (404/error
+  pages just get more side margin, no regression).
+- `AppShellContext` gained `appName: string` (previously only `health`),
+  so pages can use the already-computed assistant name directly.
+- Frontend tests: 23 new/changed unit tests (`greeting.test.ts`,
+  `WidgetCard.test.tsx`, `GreetingWidget.test.tsx`, `ClockWidget.test.tsx`,
+  `PlaceholderWidget.test.tsx`, `DashboardPage.test.tsx` replacing
+  `HomePage.test.tsx`) plus one new integration assertion in `App.test.tsx`.
+- E2E: `tests/e2e/smoke.spec.ts` gained a test asserting the greeting and
+  every widget tile render on a real page load.
+
 ## [0.2.0] - 2026-07-09
 
 **Foundation frozen.** UI Framework built, then reviewed twice (a UI-specific

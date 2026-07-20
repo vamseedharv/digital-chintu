@@ -1,11 +1,17 @@
 # 007 Dashboard
 
-## Status: Not started
+## Status: Done
 
-`frontend-dashboard/src/components/HealthStatus.tsx` is a diagnostic
-backend-connectivity view built for Project Setup verification purposes —
-it is not the actual Dashboard feature (widgets, device tiles, layout,
-multiple data sources). Fully open.
+The home route (`/`) is now a real widget-hosting dashboard, not the
+diagnostic-only page it was: a greeting naming the configured assistant, a
+live clock, the existing `HealthStatus` backend check (unchanged, now one
+tile among several), and placeholder tiles for Weather/Reminders/To-do/
+Shopping List. See
+[docs/SDS/01_UI/012_Dashboard.md](../SDS/01_UI/012_Dashboard.md) for the
+full requirements, UX flow, and component breakdown, and
+[docs/architecture/09_UI_DESIGN_SYSTEM.md](../architecture/09_UI_DESIGN_SYSTEM.md)
+for the `WidgetCard` shell added to the component library. No backend
+changes were needed — see 012_Dashboard.md's "Backend Design" for why.
 
 ## Objective
 Implement the feature in a production-ready manner.

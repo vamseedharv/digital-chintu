@@ -28,7 +28,7 @@ if they are (set outside of CI). No need to start them manually first.
 
 ## Scope
 
-This is a smoke suite (dashboard loads, backend health status renders,
-theme toggle works) — not wired into the default CI gate in
+This is a smoke suite (dashboard loads with its widget grid, backend health
+status renders, theme toggle works) — not wired into the default CI gate in
 `.github/workflows/ci.yml`, to keep CI fast. Run it locally, or add a
 dedicated CI job once there's enough UI surface to justify the extra runtime.

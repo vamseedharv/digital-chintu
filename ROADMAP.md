@@ -23,7 +23,7 @@ finding fixed — see [CHANGELOG.md](CHANGELOG.md)'s `[0.2.0]` entry and
 | 004 Backend Core | ⚠️ Mostly done (error-response format, request middleware still open) |
 | 005 Frontend Framework | ✅ Done (application shell, routing, component library) |
 | 006 Theme Engine | ✅ Core done (custom spacing scale and broader component library deferred to real UI features that need them) |
-| 007 Dashboard | ❌ Not started (only a diagnostic health view exists) |
+| 007 Dashboard | ✅ Done (added after the freeze — widget-hosting home screen, see docs/features/007_Dashboard.md) |
 | 008 Settings | ❌ Not started (env-var config only, no UI/API) |
 | 009 Assistant Onboarding | ❌ Not started (name is configurable, but no onboarding flow) |
 

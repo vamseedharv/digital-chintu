@@ -43,6 +43,16 @@ describe('App', () => {
     })
   })
 
+  it('renders the dashboard widgets, greeting the configured app name', async () => {
+    renderApp()
+
+    await waitFor(() => {
+      expect(screen.getByText('Chintu is ready to help.')).toBeInTheDocument()
+    })
+    expect(screen.getByRole('heading', { level: 2, name: 'Clock' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 2, name: 'Weather' })).toBeInTheDocument()
+  })
+
   it('shows an error state when the backend is unreachable', async () => {
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('network error')))
 

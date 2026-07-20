@@ -67,10 +67,14 @@ manager) together, and is the single entrypoint (`uvicorn app.main:app`).
   sync), `PageContainer`.
 - `components/` (top level) — feature components composed from the above
   primitives, e.g. `HealthStatus`, `ThemeToggle`.
+- `components/dashboard/` — `WidgetCard` (shared tile shell) and the
+  widgets built on it (`GreetingWidget`, `ClockWidget`,
+  `PlaceholderWidget`) for the Dashboard route.
 - `app/` — the composition root: `AppShell.tsx` (sidebar/drawer layout,
   skip-to-content link, header), `router.tsx` (`react-router` route table),
   `navigation.ts` (nav item list, consumed by `NavLinks`).
-- `routes/` — page components rendered by the router: `HomePage`,
+- `routes/` — page components rendered by the router: `DashboardPage` (the
+  widget-hosting home screen — see [09_UI_DESIGN_SYSTEM.md](09_UI_DESIGN_SYSTEM.md)),
   `NotFoundPage` (404), `ErrorPage` (route-level error boundary).
 - `main.tsx` — mounts `RouterProvider` wrapped in `ThemeProvider` and
   `<MotionConfig reducedMotion="user">`; the header name and document title

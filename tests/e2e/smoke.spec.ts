@@ -15,6 +15,22 @@ test('dashboard loads and shows backend health status using the configured app n
   await expect(status).toContainText(appName ?? '')
 })
 
+test('dashboard shows the greeting and widget grid', async ({ page }) => {
+  await page.goto('/')
+
+  // The greeting is the page's h1 and mentions the same configured app name
+  // as the sidebar — never a hardcoded assistant name.
+  const appName = await page.getByTestId('app-name').textContent()
+  await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
+  await expect(page.getByText(`${appName} is ready to help.`)).toBeVisible()
+
+  await expect(page.getByRole('heading', { name: 'Clock' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Weather' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Reminders' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'To-do' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Shopping list' })).toBeVisible()
+})
+
 test('theme toggle switches between light and dark mode', async ({ page }) => {
   await page.goto('/')
 

@@ -62,12 +62,20 @@ description + action — used by 404/error pages, reusable for future "no
 data yet" states), `Heading`, `Text`.
 
 `frontend-dashboard/src/components/layout/`: `PageContainer` (consistent
-max-width/padding), `NavLinks` (the actual nav-item list — shared by both
-`Sidebar` and `MobileNav` so the desktop/mobile variants of the same
-navigation can't drift out of sync with each other), `Sidebar` (desktop
-nav), `MobileNav` (drawer nav: focus moves to its close button on open,
-Escape closes it, and Tab is trapped inside it while open so keyboard focus
-can't leave the drawer into the page behind it).
+max-width/padding — `max-w-5xl`, widened from `max-w-2xl` for the
+Dashboard's multi-column widget grid), `NavLinks` (the actual nav-item
+list — shared by both `Sidebar` and `MobileNav` so the desktop/mobile
+variants of the same navigation can't drift out of sync with each other),
+`Sidebar` (desktop nav), `MobileNav` (drawer nav: focus moves to its close
+button on open, Escape closes it, and Tab is trapped inside it while open
+so keyboard focus can't leave the drawer into the page behind it).
+
+`frontend-dashboard/src/components/dashboard/`: the Dashboard feature's
+first extracted primitive, `WidgetCard` (glass `Card` + optional icon +
+`<h2>` title + content slot) — every dashboard tile (built-in or a future
+feature's) renders through it, so a new widget only writes its content.
+`GreetingWidget`, `ClockWidget`, and `PlaceholderWidget` build on it; see
+[docs/SDS/01_UI/012_Dashboard.md](../SDS/01_UI/012_Dashboard.md).
 
 ## Dark / light theme
 
@@ -106,7 +114,8 @@ actual screen reader — that still needs a human pass.
 
 ## Not implemented yet
 
-No custom spacing scale (Tailwind's default is sufficient so far), no
-component library beyond what's listed above. Extract more shared
-primitives once a real UI feature (Dashboard, Settings, Notifications)
-needs them — see [ROADMAP.md](../../ROADMAP.md)'s Phase 6.
+No custom spacing scale (Tailwind's default is sufficient so far) — the
+Dashboard needed a shared tile shell (`WidgetCard`, listed above) but
+nothing beyond Tailwind's existing spacing tokens. Extract further shared
+primitives once another real UI feature (Settings, Notifications) needs
+them — see [ROADMAP.md](../../ROADMAP.md)'s Phase 6.

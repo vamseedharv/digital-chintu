@@ -26,10 +26,11 @@ frontend-dashboard/    React + TypeScript + Vite + Tailwind web dashboard
   src/
     api/                  fetch client + typed calls + hooks
     app/                   composition root: AppShell, router, navigation
-    routes/                 page components (HomePage, NotFoundPage, ErrorPage)
+    routes/                 page components (DashboardPage, NotFoundPage, ErrorPage)
     components/ui/           presentational primitives (Button, Card, ...)
     components/layout/        Sidebar, MobileNav, NavLinks, PageContainer
     components/               feature components (HealthStatus, ThemeToggle)
+    components/dashboard/      WidgetCard + widgets built on it (Greeting, Clock, Placeholder)
     theme/                 dark/light ThemeProvider + useTheme
     __tests__/
       unit/                 one hook/component/module in isolation

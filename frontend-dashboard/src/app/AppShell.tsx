@@ -12,6 +12,7 @@ const DEFAULT_APP_NAME = 'Digital Chintu'
 
 export interface AppShellContext {
   health: HealthState
+  appName: string
 }
 
 export function AppShell() {
@@ -50,7 +51,7 @@ export function AppShell() {
 
         <PageContainer>
           <main id="main-content">
-            <Outlet context={{ health } satisfies AppShellContext} />
+            <Outlet context={{ health, appName } satisfies AppShellContext} />
           </main>
         </PageContainer>
       </div>
