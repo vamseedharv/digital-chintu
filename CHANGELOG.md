@@ -7,7 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-Nothing yet — `010_Plugin_Framework` is next (see [ROADMAP.md](ROADMAP.md)).
+### Added
+
+- Configuration system (`backend/app/core/config.py`): typed, validated
+  settings on top of the existing `pydantic-settings` base —
+  `Environment` (`development`/`testing`/`production`) and `Theme`
+  (`light`/`dark`/`system`) enums, new `WAKE_WORD`/`DEFAULT_THEME`/
+  `DEFAULT_LANGUAGE` settings alongside the existing `APP_NAME`, non-blank/
+  length validation on assistant-identity fields, BCP-47-style format
+  validation on `default_language`, and a hard validation error for
+  `app_env=production` + `debug=true` together (fails fast at startup
+  instead of serving verbose tracebacks in production).
+- `GET /api/v1/config`: read-only runtime configuration endpoint exposing
+  the non-secret settings above via a Pydantic `response_model` — the first
+  endpoint to use one (see `docs/architecture/04_API_GUIDELINES.md`).
+- Backend tests: 19 new unit tests (`tests/unit/test_config.py`) covering
+  defaults, env-var overrides, and every new validation rule; 3 new
+  integration tests (`tests/integration/test_config_api.py`) for the new
+  endpoint, including its OpenAPI schema.
+
+No UI, AI, or reminders work included — config values only (wake word,
+theme, language are settings a future feature reads/exposes, not the
+wake-word engine, an AI router, or reminders themselves). See
+`docs/features/008_Settings.md`, `009_Assistant_Onboarding.md`, and
+`011_Wake_Word.md` for what's still open on top of this.
 
 ## [0.2.0] - 2026-07-09
 

@@ -17,6 +17,9 @@ services:
       LOG_DIR: /app/logs
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173}
       DATABASE_URL: sqlite:////app/data/chintu.db
+      WAKE_WORD: ${WAKE_WORD:-Hey Chintu}
+      DEFAULT_THEME: ${DEFAULT_THEME:-system}
+      DEFAULT_LANGUAGE: ${DEFAULT_LANGUAGE:-en-US}
     volumes:
       - backend-data:/app/data
       - backend-logs:/app/logs

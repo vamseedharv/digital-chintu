@@ -15,8 +15,12 @@ app.main
 
 app.api.v1.router
   -> app.api.v1.endpoints.health
+  -> app.api.v1.endpoints.config
 
 app.api.v1.endpoints.health
+  -> app.core.config
+
+app.api.v1.endpoints.config
   -> app.core.config
 
 app.db.session

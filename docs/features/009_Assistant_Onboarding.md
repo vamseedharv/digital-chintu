@@ -3,9 +3,11 @@
 ## Status: Not started
 
 The assistant's name (`APP_NAME`) is runtime-configurable via environment
-variable end-to-end (backend config → `/api/v1/health` → frontend header,
-verified with tests) — but there is no onboarding *flow* for a user to set
-it through the UI. Fully open.
+variable end-to-end (backend config → `/api/v1/health` and `/api/v1/config`
+→ frontend header, verified with tests), validated non-blank at the config
+layer — but there is no onboarding *flow* for a user to set it (or the wake
+word, default theme, or default language, all now equally
+config-layer-configurable) through the UI. Fully open.
 
 ## Objective
 Implement the feature in a production-ready manner.

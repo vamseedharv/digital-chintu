@@ -1,6 +1,7 @@
 import pytest
+from pydantic import ValidationError
 
-from app.core.config import Settings, get_settings
+from app.core.config import Environment, Settings, Theme, get_settings
 
 
 def test_defaults_are_safe_for_an_unconfigured_deployment() -> None:
@@ -13,6 +14,9 @@ def test_defaults_are_safe_for_an_unconfigured_deployment() -> None:
     assert settings.debug is False
     assert settings.api_v1_prefix == "/api/v1"
     assert settings.database_url == "sqlite:///./data/chintu.db"
+    assert settings.wake_word == "Hey Chintu"
+    assert settings.default_theme == "system"
+    assert settings.default_language == "en-US"
 
 
 @pytest.mark.parametrize(
@@ -58,3 +62,78 @@ def test_get_settings_is_cached_until_explicitly_cleared() -> None:
     third = get_settings()
 
     assert third is not first
+
+
+def test_assistant_settings_are_overridable_via_environment_variables(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("WAKE_WORD", "Hey Jarvis")
+    monkeypatch.setenv("DEFAULT_THEME", "dark")
+    monkeypatch.setenv("DEFAULT_LANGUAGE", "hi-IN")
+    monkeypatch.setenv("APP_ENV", "testing")
+
+    settings = Settings(_env_file=None)  # type: ignore[call-arg]
+
+    assert settings.wake_word == "Hey Jarvis"
+    assert settings.default_theme is Theme.DARK
+    assert settings.default_language == "hi-IN"
+    assert settings.app_env is Environment.TESTING
+
+
+def test_app_name_and_wake_word_are_trimmed_of_surrounding_whitespace() -> None:
+    settings = Settings(_env_file=None, app_name="  Chintu  ", wake_word="  Hey Chintu  ")  # type: ignore[call-arg]
+
+    assert settings.app_name == "Chintu"
+    assert settings.wake_word == "Hey Chintu"
+
+
+@pytest.mark.parametrize("field", ["app_name", "wake_word"])
+def test_blank_assistant_identity_fields_are_rejected(field: str) -> None:
+    with pytest.raises(ValidationError):
+        Settings(_env_file=None, **{field: "   "})  # type: ignore[call-arg, arg-type]
+
+
+def test_overly_long_wake_word_is_rejected() -> None:
+    with pytest.raises(ValidationError):
+        Settings(_env_file=None, wake_word="x" * 65)  # type: ignore[call-arg]
+
+
+@pytest.mark.parametrize("invalid_tag", ["english", "EN", "en_US", "en-us", ""])
+def test_malformed_language_tags_are_rejected(invalid_tag: str) -> None:
+    with pytest.raises(ValidationError):
+        Settings(_env_file=None, default_language=invalid_tag)  # type: ignore[call-arg]
+
+
+@pytest.mark.parametrize("valid_tag", ["en", "en-US", "hi-IN", "fra"])
+def test_well_formed_language_tags_are_accepted(valid_tag: str) -> None:
+    settings = Settings(_env_file=None, default_language=valid_tag)  # type: ignore[call-arg]
+
+    assert settings.default_language == valid_tag
+
+
+def test_unknown_environment_profile_is_rejected() -> None:
+    with pytest.raises(ValidationError):
+        Settings(_env_file=None, app_env="staging")  # type: ignore[call-arg, arg-type]
+
+
+def test_unknown_theme_is_rejected() -> None:
+    with pytest.raises(ValidationError):
+        Settings(_env_file=None, default_theme="blue")  # type: ignore[call-arg, arg-type]
+
+
+def test_production_profile_forbids_debug_mode() -> None:
+    with pytest.raises(ValidationError, match="debug must be false"):
+        Settings(_env_file=None, app_env="production", debug=True)  # type: ignore[call-arg, arg-type]
+
+
+def test_production_profile_allows_debug_disabled() -> None:
+    settings = Settings(_env_file=None, app_env="production", debug=False)  # type: ignore[call-arg, arg-type]
+
+    assert settings.app_env is Environment.PRODUCTION
+    assert settings.debug is False
+
+
+def test_development_profile_still_allows_debug_mode() -> None:
+    settings = Settings(_env_file=None, app_env="development", debug=True)  # type: ignore[call-arg, arg-type]
+
+    assert settings.debug is True

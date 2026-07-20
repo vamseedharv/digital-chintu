@@ -1,6 +1,6 @@
 # 04 API Guidelines
 
-Status: **one endpoint implemented** — conventions below are what that endpoint follows;
+Status: **two endpoints implemented** — conventions below are what they follow;
 apply the same conventions as new endpoints are added.
 
 ## REST
@@ -13,12 +13,14 @@ apply the same conventions as new endpoints are added.
 - Responses are plain JSON with `snake_case` keys (matches Python/Pydantic
   convention; see `docs/architecture/02_REPOSITORY_STRUCTURE.md` for the
   naming-consistency note about the frontend consuming this as-is).
-- The current health endpoint (`GET /api/v1/health`) returns a bare
-  `dict[str, str]` rather than a Pydantic `response_model`. That's fine for
-  one endpoint with no real schema to document; the first endpoint with
-  actual request/response validation needs should use a `response_model` so
-  FastAPI's generated OpenAPI schema (`/openapi.json`) stays accurate (see
-  [BACKLOG.md](../../BACKLOG.md)).
+- The health endpoint (`GET /api/v1/health`) returns a bare `dict[str, str]`
+  rather than a Pydantic `response_model` — fine for an endpoint with no real
+  schema to document. `GET /api/v1/config` (`endpoints/config.py`, added for
+  the configuration system) is the first endpoint with an actual fixed
+  shape and uses a `response_model` (`RuntimeConfigResponse`), so FastAPI's
+  generated OpenAPI schema (`/openapi.json`) documents it accurately — the
+  pattern the health endpoint was always meant to hand off to once one
+  existed (see [BACKLOG.md](../../BACKLOG.md)).
 - CORS is restrictive by default (`CORS_ORIGINS`, comma-separated allow-list
   — no wildcard), configured in `backend/app/main.py`.
 

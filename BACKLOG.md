@@ -56,10 +56,11 @@ section; not dated commitments.
 - [ ] The backend's pip distribution name (`digital-chintu-backend`) wraps a
   generically-named `app` module — fine in its own venv, would collide if a
   second Python service ever shares one. Not urgent.
-- [ ] `GET /api/v1/health` returns a bare `dict[str, str]` instead of a
+- [ ] `GET /api/v1/health` still returns a bare `dict[str, str]` instead of a
   Pydantic `response_model` — deliberate for an endpoint with no real
-  schema; use `response_model` for the next endpoint that has one. See
-  `docs/architecture/04_API_GUIDELINES.md`.
+  schema. (`GET /api/v1/config`, added with the configuration system, is the
+  first endpoint to use `response_model`; not retrofitting `health` since it
+  genuinely has no schema to document.) See `docs/architecture/04_API_GUIDELINES.md`.
 - [ ] `shared/` has no npm workspace wiring yet (no root `package.json`, no
   `workspaces` field) — set this up when it actually gets its first real
   content, not speculatively.

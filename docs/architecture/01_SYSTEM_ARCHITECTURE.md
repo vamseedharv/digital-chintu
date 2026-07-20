@@ -40,7 +40,7 @@ it (no compiled/CI-enforced boundary yet — see "Known gaps" below):
 
 | Layer | Path | Today |
 |---|---|---|
-| HTTP interface | `api/v1/` | `router.py` aggregates endpoint routers; one endpoint (`endpoints/health.py`) exists |
+| HTTP interface | `api/v1/` | `router.py` aggregates endpoint routers: `endpoints/health.py` (liveness) and `endpoints/config.py` (read-only runtime configuration) |
 | Cross-cutting | `core/` | `config.py` (pydantic-settings, env-driven), `logging.py` (console + rotating file handler), `scheduler.py` (APScheduler instance, started/stopped via the app's lifespan, no jobs registered yet) |
 | Application logic | `services/` | Empty — no feature has needed business logic yet |
 | Data access | `repositories/` | Empty — no feature has needed persistence yet |
@@ -83,13 +83,35 @@ see "Known gaps" below.
 
 ## Configuration flow
 
-Every runtime setting is an environment variable, read once via
-`pydantic-settings` (`backend/app/core/config.py`) and cached
-(`@lru_cache`). Native dev reads `backend/.env`; Docker Compose passes
-variables through from the repo-root `.env` (see `docker-compose.yml`). The
-same mechanism is how `APP_NAME` (the assistant's display name) stays
-runtime-configurable end-to-end: backend env var → `/api/v1/health` response
-→ frontend header/tab title (never hardcoded on the frontend).
+Every runtime setting is an environment variable, typed and validated by a
+single `pydantic-settings` model (`Settings` in `backend/app/core/config.py`),
+read once and cached process-wide (`@lru_cache def get_settings()`). Native
+dev reads `backend/.env`; Docker Compose passes variables through from the
+repo-root `.env` (see `docker-compose.yml`). This is "runtime configuration"
+in the sense that matters here: values are resolved when the process starts
+from its environment, not baked in at build time (contrast the frontend's
+`VITE_*` vars, inlined at build) — there is no hot-reload or live write API
+yet, that's a separate, not-yet-started feature
+([008_Settings](../features/008_Settings.md)).
+
+Settings today:
+
+| Setting | Env var | Type | Notes |
+|---|---|---|---|
+| App/assistant name | `APP_NAME` | `str` | Non-blank, ≤64 chars. Never hardcoded — flows to `/api/v1/health` and `/api/v1/config`, then the frontend header/tab title. |
+| Environment profile | `APP_ENV` | `Environment` enum (`development`/`testing`/`production`) | Rejects unknown values. `production` + `debug=true` together is a validation error, not just a bad default. |
+| Debug mode | `DEBUG` | `bool` | Defaults `False` regardless of profile — see [06_SECURITY.md](06_SECURITY.md). |
+| Wake word | `WAKE_WORD` | `str` | Non-blank, ≤64 chars. Config value only — no wake-word *detection* engine yet ([011_Wake_Word](../features/011_Wake_Word.md)). |
+| Default theme | `DEFAULT_THEME` | `Theme` enum (`light`/`dark`/`system`) | The system-wide default before any per-user override; the frontend's own `ThemeProvider` persists a separate per-browser choice to `localStorage`. |
+| Default language | `DEFAULT_LANGUAGE` | `str` | Validated as a BCP-47-style tag (`en`, `en-US`, `hi-IN`) — format only, no actual translation/i18n yet ([032_Multilingual](../features/032_Multilingual.md)). |
+| CORS origins, log level/dir, DB URL, API prefix | see `.env.example` | — | Unchanged infrastructure settings. |
+
+`GET /api/v1/config` exposes the non-secret subset of the above (app name,
+wake word, default theme, default language, environment) — the same role
+`/api/v1/health` already played for just `app_name`, generalized now that
+there's more than one client-relevant setting. Both are read-only; neither
+lets a client change a setting (that's still 008's gap to close, likely with
+its own DB-backed override on top of these env-driven defaults).
 
 ## Known gaps (intentional, tracked for later features)
 

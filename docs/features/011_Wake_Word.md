@@ -1,5 +1,14 @@
 # 011 Wake Word
 
+## Status: Not started
+
+`WAKE_WORD` exists as a validated config value (non-blank, ≤64 chars —
+`backend/app/core/config.py`, default `"Hey Chintu"`, readable via
+`GET /api/v1/config`), added as part of the configuration system. No
+wake-word *detection* engine (OpenWakeWord, per
+[docs/Foundation/04_Tech_Stack.md](../Foundation/04_Tech_Stack.md)) is
+integrated — this feature is otherwise fully open.
+
 ## Objective
 Implement the feature in a production-ready manner.
 

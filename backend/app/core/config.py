@@ -1,8 +1,29 @@
 """Application configuration, loaded from environment variables / .env file."""
 
+import re
+from enum import StrEnum
 from functools import lru_cache
 
+from pydantic import ValidationInfo, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+_LANGUAGE_TAG_RE = re.compile(r"[a-z]{2,3}(-[A-Z]{2})?")
+
+
+class Environment(StrEnum):
+    """Deployment profile — drives which config-validation rules apply."""
+
+    DEVELOPMENT = "development"
+    TESTING = "testing"
+    PRODUCTION = "production"
+
+
+class Theme(StrEnum):
+    """Default theme preference, before any per-user override."""
+
+    LIGHT = "light"
+    DARK = "dark"
+    SYSTEM = "system"
 
 
 class Settings(BaseSettings):
@@ -11,7 +32,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
     app_name: str = "Chintu"
-    app_env: str = "development"
+    app_env: Environment = Environment.DEVELOPMENT
     # Defaults to False so an accidental deployment without an explicit .env
     # doesn't leak verbose tracebacks. Local dev enables it via .env.example.
     debug: bool = False
@@ -25,6 +46,40 @@ class Settings(BaseSettings):
     cors_origins: str = "http://localhost:5173"
 
     database_url: str = "sqlite:///./data/chintu.db"
+
+    # Assistant identity/behavior defaults. `app_name` is the assistant's
+    # display/spoken name (CLAUDE.md: "never hardcoded"); the rest are
+    # env-driven defaults a future onboarding/settings feature can read —
+    # this layer doesn't persist per-user overrides, see docs/features/008_Settings.md.
+    wake_word: str = "Hey Chintu"
+    default_theme: Theme = Theme.SYSTEM
+    default_language: str = "en-US"
+
+    @field_validator("app_name", "wake_word")
+    @classmethod
+    def _not_blank(cls, value: str, info: ValidationInfo) -> str:
+        stripped = value.strip()
+        if not stripped:
+            raise ValueError(f"{info.field_name} must not be blank")
+        if len(stripped) > 64:
+            raise ValueError(f"{info.field_name} must be 64 characters or fewer")
+        return stripped
+
+    @field_validator("default_language")
+    @classmethod
+    def _valid_language_tag(cls, value: str) -> str:
+        if not _LANGUAGE_TAG_RE.fullmatch(value):
+            raise ValueError("default_language must be a BCP-47-style tag, e.g. 'en' or 'en-US'")
+        return value
+
+    @model_validator(mode="after")
+    def _production_must_not_run_with_debug(self) -> "Settings":
+        if self.app_env is Environment.PRODUCTION and self.debug:
+            raise ValueError(
+                "debug must be false when app_env is 'production' "
+                "(see docs/architecture/06_SECURITY.md)"
+            )
+        return self
 
     @property
     def cors_origins_list(self) -> list[str]:

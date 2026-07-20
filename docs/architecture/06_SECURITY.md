@@ -9,6 +9,11 @@ feature exists yet (nothing today requires a user account or API key).
   unconfigured deployment (no `.env` present) will not leak verbose FastAPI
   tracebacks. Local dev opts into `DEBUG=true` explicitly via
   `backend/.env.example`.
+- **`debug=true` is a hard validation error when `app_env=production`** —
+  not just a default someone could still override into an unsafe
+  combination. `Settings` raises at construction time (app fails to start)
+  rather than serving verbose tracebacks in a deployment that declared
+  itself production.
 - **CORS is an explicit allow-list**, never a wildcard
   (`CORS_ORIGINS`, comma-separated). Verified by an integration test that
   asserts an unconfigured origin does *not* get an

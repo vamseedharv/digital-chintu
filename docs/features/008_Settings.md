@@ -2,9 +2,16 @@
 
 ## Status: Not started
 
-Configuration today is env-var-driven only (`backend/app/core/config.py`,
-requires a restart to change). There is no user-facing Settings feature —
-no API to read/write settings at runtime, no Settings UI. Fully open.
+Configuration is env-var-driven, typed, and validated
+(`backend/app/core/config.py`; see
+[docs/architecture/01_SYSTEM_ARCHITECTURE.md](../architecture/01_SYSTEM_ARCHITECTURE.md)'s
+"Configuration flow"), including assistant name, wake word, default theme,
+and default language — and read-only via `GET /api/v1/config`. Changing any
+of it still requires a restart and editing `.env` by hand: there is no
+user-facing Settings feature — no API to *write* settings at runtime, no
+persisted per-user overrides, no Settings UI. Fully open; this feature
+should decide whether it wraps/replaces the env-driven defaults with a
+DB-backed override layer.
 
 ## Objective
 Implement the feature in a production-ready manner.

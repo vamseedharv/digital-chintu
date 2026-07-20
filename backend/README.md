@@ -66,8 +66,16 @@ black .
 
 ## Configuration
 
-All settings are environment variables (see `.env.example`), loaded via
-`pydantic-settings` in `app/core/config.py`. Notably `APP_NAME` is the
-configurable assistant name referenced throughout the project vision — it is
-just an environment default here; the onboarding UI to change it at runtime is
-a future feature.
+All settings are environment variables (see `.env.example`), typed and
+validated by a single `Settings` model (`pydantic-settings`,
+`app/core/config.py`), cached process-wide via `get_settings()`. Beyond the
+infrastructure basics (`APP_ENV`, `DEBUG`, `LOG_LEVEL`, `CORS_ORIGINS`,
+`DATABASE_URL`), this includes assistant-identity defaults: `APP_NAME`,
+`WAKE_WORD`, `DEFAULT_THEME` (`light`/`dark`/`system`), and
+`DEFAULT_LANGUAGE` (a BCP-47-style tag, e.g. `en-US`) — all runtime-overridable
+via environment variable, never hardcoded. `APP_ENV=production` combined
+with `DEBUG=true` is a validation error, not just a discouraged default.
+The non-secret subset is readable via `GET /api/v1/config`; there's no write
+API yet — an onboarding/settings UI to change any of this at runtime is a
+future feature ([docs/features/008_Settings.md](../docs/features/008_Settings.md),
+[009_Assistant_Onboarding.md](../docs/features/009_Assistant_Onboarding.md)).
