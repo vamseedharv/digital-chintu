@@ -1,8 +1,8 @@
 # 08 Testing Strategy
 
-Status: **implemented** for the Project Setup surface (config, logging, db session
-scaffolding, health endpoint, theme, health-check UI). Extend the same pattern as
-each new feature lands — don't invent a different structure per feature.
+Status: **implemented**, extended as each feature lands (Project Setup,
+Dashboard, Plugin Framework, Settings) — same three-tier structure
+throughout, don't invent a different one per feature.
 
 ## Three tiers
 
@@ -25,24 +25,40 @@ a behavioral test.
   `get_settings()` `@lru_cache` before and after every test — without it, an
   env var set by one test leaks into the next test's `Settings()` instance.
 - Tests that need a non-default config build their own `Settings(...)` or
-  `TestClient(create_app())` locally in the test body (after
+  their own app instance locally in the test body (after
   `monkeypatch.setenv` + `get_settings.cache_clear()`), rather than relying
   on the shared `client` fixture — fixtures are resolved before the test body
   runs, so env vars set inside the test body can't affect an
   already-constructed fixture.
+- **Any test that builds its own app must call `tests.conftest.make_test_client(create_app())`,
+  never a bare `TestClient(create_app())`.** Since `008_Settings` added a
+  real database, a bare `TestClient` would read/write the developer's actual
+  `backend/data/chintu.db` (via `DATABASE_URL`'s default). `make_test_client()`
+  overrides FastAPI's `get_db` dependency with an isolated in-memory SQLite
+  database (`Base.metadata.create_all()`, not Alembic — see
+  [03_DATABASE_DESIGN.md](03_DATABASE_DESIGN.md)'s "Testing"), so no test can
+  ever touch the real file. The shared `client` fixture and the `db_session`
+  fixture (for tests that exercise a repository/service directly, no FastAPI
+  involved) both use the same isolation.
 - `backend/app/db/session.py` binds its engine to settings at *import time*,
   so testing a different `DATABASE_URL` means `importlib.reload()`-ing the
   module under a monkeypatched environment (see `tests/unit/test_session.py`)
   — not a pattern to reach for casually, but necessary here without
-  refactoring the production module.
+  refactoring the production module. This is unrelated to (and doesn't
+  replace) `make_test_client()`'s dependency-override isolation above.
 - `tests/unit/test_scheduler.py` verifies the APScheduler instance
   (`core/scheduler.py`) starts and stops with the FastAPI app's lifespan
-  (via `with TestClient(create_app()):`) — it has no jobs to test yet, only
-  that the lifecycle wiring itself works.
+  (via `with make_test_client(create_app()):`) — it has no jobs to test yet,
+  only that the lifecycle wiring itself works.
+- `tests/unit/test_migrations.py` is the only test that touches Alembic at
+  all — it runs the real `alembic` CLI as a subprocess against a throwaway
+  `tmp_path` SQLite file, since `make_test_client()`'s `create_all()`
+  shortcut never exercises the actual migration files.
 
 Run with coverage: `pytest --cov-report=html` → `backend/htmlcov/index.html`.
-Current coverage: **97% statements** (the only gap is `db/base.py`'s empty
-`DeclarativeBase` class — nothing to test until real models exist).
+Current coverage: **99% statements** (101 tests). No deliberate gaps left
+unexplained: `db/base.py`'s `DeclarativeBase` is now exercised by
+`SettingModel`.
 
 ## Frontend
 
@@ -62,25 +78,37 @@ Current coverage: **97% statements** (the only gap is `db/base.py`'s empty
   together — including the 404 route and the mobile nav drawer's open/close
   behavior, not just the home page.
 
+- `useSettings` mirrors `useHealth`'s exact state-machine and
+  unmount-during-fetch-race test pattern, plus its own `saveState` machine
+  for the `PATCH` action (idle/saving/success/error) — same shape, one more
+  dimension.
+
 Run with coverage: `npx vitest run --coverage` → `frontend-dashboard/coverage/index.html`.
-Current coverage: **98.21% statements, 97.4% branches, 100% functions/lines**.
-Two deliberate gaps: `ThemeProvider`'s `typeof window === 'undefined'` SSR
-guard (untestable in jsdom without mocking the mock) and `MobileNav`'s
-`!first || !last` empty-focusable-list guard (defensive — the drawer always
-renders at least a close button and one nav link in practice).
+Current coverage: **98.4% statements, 96.74% branches, 100% functions, 99.4%
+lines** (103 tests). Deliberate gaps: `ThemeProvider`'s `typeof window ===
+'undefined'` SSR guard (untestable in jsdom without mocking the mock) and
+`MobileNav`'s `!first || !last` empty-focusable-list guard (defensive — the
+drawer always renders at least a close button and one nav link in practice).
 
 ## E2E
 
-`tests/playwright.config.ts` auto-starts both the backend (`uvicorn`, via
-whichever of `backend/.venv/bin/python` or `backend/.venv/Scripts/python.exe`
-actually exists — checked by file, not by host OS, so a venv built on a
-different OS than the one running the test doesn't silently break) and the
-frontend (`npm run dev`), and reuses them if already running outside of CI.
+`tests/playwright.config.ts` auto-starts both the backend (`alembic upgrade
+head`, then `uvicorn`, via whichever of `backend/.venv/bin/python` or
+`backend/.venv/Scripts/python.exe` actually exists — checked by file, not by
+host OS, so a venv built on a different OS than the one running the test
+doesn't silently break) and the frontend (`npm run dev`), and reuses them if
+already running outside of CI.
 
 Assertions favor properties over exact strings where the underlying value is
 configurable — e.g. the E2E header-name check asserts the header text
 matches whatever the health-status line reports, rather than hardcoding the
 default app name, so it can't regress into re-hardcoding the assistant name.
+
+Unlike the backend/frontend unit and integration suites, E2E drives the
+*real* dev database (no `make_test_client()`-style isolation possible — it's
+a real browser hitting a real server). The settings E2E test changes and
+then restores the assistant name for exactly this reason — see
+`tests/README.md`.
 
 Not wired into `.github/workflows/ci.yml` — kept as a local/manual suite for
 now to keep CI fast; add a dedicated CI job once there's enough UI surface to

@@ -20,7 +20,7 @@ setup:
 	bash scripts/setup.sh
 
 backend-dev:
-	cd backend && $(VENV_PY) -m uvicorn app.main:app --reload
+	cd backend && $(VENV_PY) -m alembic upgrade head && $(VENV_PY) -m uvicorn app.main:app --reload
 
 frontend-dev:
 	cd frontend-dashboard && npm run dev

@@ -6,6 +6,7 @@ from fastapi.testclient import TestClient
 
 from app.core.config import get_settings
 from app.main import create_app
+from tests.conftest import make_test_client
 
 _STARTUP_PLUGIN_SOURCE = """
 from fastapi import APIRouter
@@ -139,7 +140,7 @@ def _client_with_plugins_dir(
     if enabled_plugins is not None:
         monkeypatch.setenv("ENABLED_PLUGINS", enabled_plugins)
     get_settings.cache_clear()
-    return TestClient(create_app())
+    return make_test_client(create_app())
 
 
 def test_plugins_endpoint_returns_empty_list_with_no_plugins_installed(
@@ -234,7 +235,7 @@ def test_plugin_startup_and_shutdown_hooks_run_with_the_app_lifespan(
     app = create_app()
     plugin_module = sys.modules["_digital_chintu_plugin_lifecycle-plugin"]
 
-    with TestClient(app) as client:
+    with make_test_client(app) as client:
         response = client.get("/api/v1/plugins/lifecycle-plugin/ping")
         assert response.status_code == 200
         assert plugin_module.startup_calls == ["started"]
@@ -253,7 +254,7 @@ def test_a_plugin_raising_in_on_startup_or_on_shutdown_does_not_crash_the_app(
     # Neither on_startup nor on_shutdown raising should propagate out of the
     # lifespan context — the rest of the app (and other plugins) must still
     # come up and serve requests normally.
-    with TestClient(create_app()) as client:
+    with make_test_client(create_app()) as client:
         response = client.get("/api/v1/health")
         assert response.status_code == 200
 
@@ -266,7 +267,7 @@ def test_a_disabled_plugins_lifecycle_hooks_are_not_invoked(
     monkeypatch.setenv("PLUGINS_DIR", str(tmp_path))
     get_settings.cache_clear()
 
-    with TestClient(create_app()) as client:
+    with make_test_client(create_app()) as client:
         response = client.get("/api/v1/plugins")
         assert response.status_code == 200
 

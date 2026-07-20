@@ -13,9 +13,11 @@ the *how*.
    framework-independent business objects. Skip if the feature is thin
    enough not to need them.
 2. **`repositories/`** — data access behind an interface, using
-   `app/db/session.py`'s `get_db()` dependency. Add SQLAlchemy models in
-   `app/db/` alongside `base.py`, and introduce Alembic *at that point* (not
-   before — there's nothing to migrate yet).
+   `app/db/session.py`'s `get_db()` dependency. Add SQLAlchemy models to
+   `app/db/models.py`. Alembic already exists (`backend/alembic/`, added for
+   `008_Settings`) — add a new revision (`alembic revision --autogenerate -m
+   "..."`, then review the generated file by hand) rather than reinitializing
+   it. See `docs/architecture/03_DATABASE_DESIGN.md`.
 3. **`services/`** — orchestration/business logic calling repositories.
 4. **`api/v1/endpoints/`** — one file per resource, registered in
    `api/v1/router.py`. Use a Pydantic `response_model` for anything beyond a
@@ -83,11 +85,16 @@ Backend gotchas to know before writing tests:
   `_clear_settings_cache` fixture in `tests/conftest.py` resets it between
   tests. If you construct a `Settings()` directly with custom values, pass
   `_env_file=None` to avoid picking up a real local `backend/.env`.
-- Fixtures that build a `TestClient(create_app())` do so at fixture-setup
-  time, before your test body runs — `monkeypatch.setenv()` in the test body
-  won't affect an already-built `client` fixture. Build the client locally
-  in the test if it needs custom env vars (see
-  `test_health_reflects_the_configured_app_name` for the pattern).
+- Fixtures that build a client do so at fixture-setup time, before your test
+  body runs — `monkeypatch.setenv()` in the test body won't affect an
+  already-built `client` fixture. Build the client locally in the test if it
+  needs custom env vars (see `test_health_reflects_the_configured_app_name`
+  for the pattern).
+- **Never construct a bare `TestClient(create_app())`.** Always use
+  `tests.conftest.make_test_client(create_app())` instead — it overrides the
+  `get_db` dependency with an isolated in-memory database, so the test can't
+  read or write the developer's real `backend/data/chintu.db`. See
+  `docs/architecture/08_TESTING_STRATEGY.md`.
 
 Frontend gotcha: jsdom doesn't implement `window.matchMedia` — it's polyfilled
 globally in `src/setupTests.ts`; override it per-test (see

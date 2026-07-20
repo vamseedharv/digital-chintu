@@ -12,6 +12,7 @@ dependencies = [
     "pydantic-settings>=2.5,<3.0",
     "sqlalchemy>=2.0,<3.0",
     "apscheduler>=3.10,<4.0",
+    "alembic>=1.13,<2.0",
 ]
 
 [project.optional-dependencies]
@@ -39,6 +40,9 @@ target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM"]
+# B008 (function call in a default argument) is FastAPI's own Depends(...)
+# idiom, required for its dependency injection to work — not a real bug.
+ignore = ["B008"]
 
 [tool.black]
 line-length = 100

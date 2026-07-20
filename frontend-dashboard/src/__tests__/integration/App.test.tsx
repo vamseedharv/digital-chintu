@@ -84,6 +84,18 @@ describe('App', () => {
     expect(screen.getByRole('heading', { name: 'Page not found' })).toBeInTheDocument()
   })
 
+  it('navigates to the Settings page via the sidebar link', async () => {
+    const { user } = await import('@testing-library/user-event').then((m) => ({
+      user: m.default.setup(),
+    }))
+
+    renderApp()
+
+    await user.click(screen.getByRole('link', { name: /settings/i }))
+
+    expect(screen.getByRole('heading', { level: 1, name: 'Settings' })).toBeInTheDocument()
+  })
+
   it('opens the mobile nav when the hamburger button is clicked', async () => {
     const { user } = await import('@testing-library/user-event').then((m) => ({
       user: m.default.setup(),

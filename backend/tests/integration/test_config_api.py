@@ -3,6 +3,7 @@ from fastapi.testclient import TestClient
 
 from app.core.config import get_settings
 from app.main import create_app
+from tests.conftest import make_test_client
 
 
 def test_config_returns_the_runtime_settings(client: TestClient) -> None:
@@ -28,7 +29,7 @@ def test_config_reflects_environment_overrides(monkeypatch: pytest.MonkeyPatch) 
     monkeypatch.setenv("DEFAULT_LANGUAGE", "hi-IN")
     get_settings.cache_clear()
 
-    client = TestClient(create_app())
+    client = make_test_client(create_app())
     response = client.get("/api/v1/config")
 
     body = response.json()

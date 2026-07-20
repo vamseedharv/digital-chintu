@@ -14,7 +14,7 @@ This builds and runs two services (`docker-compose.yml`):
 
 | Service | Image base | Exposes | Notes |
 |---|---|---|---|
-| `backend` | `python:3.12-slim` | `${BACKEND_PORT:-8000}` → 8000 | Runs as non-root user `chintu`; SQLite data and logs persisted in named volumes (`backend-data`, `backend-logs`) |
+| `backend` | `python:3.12-slim` | `${BACKEND_PORT:-8000}` → 8000 | Runs as non-root user `chintu`; SQLite data and logs persisted in named volumes (`backend-data`, `backend-logs`); `CMD` runs `alembic upgrade head` before starting uvicorn — see [03_DATABASE_DESIGN.md](03_DATABASE_DESIGN.md) |
 | `frontend-dashboard` | `node:22-alpine` (build) → `nginx:alpine` (runtime) | `${FRONTEND_PORT:-5173}` → 80 | Multi-stage: Vite build, then static files served by Nginx; waits for `backend`'s healthcheck before starting |
 
 All three base images (`python:3.12-slim`, `node:22-alpine`, `nginx:alpine`)
@@ -66,9 +66,10 @@ docker compose down -v                  # also remove the named volumes (destroy
 
 ## Native (non-Docker) deployment
 
-Same commands as local dev — run the backend with a production ASGI
-process (`uvicorn app.main:app --host 0.0.0.0 --port 8000`, no `--reload`)
-behind whatever reverse proxy/process manager the host provides, and serve
+Same commands as local dev — apply migrations first (`alembic upgrade
+head`), then run the backend with a production ASGI process (`uvicorn
+app.main:app --host 0.0.0.0 --port 8000`, no `--reload`) behind whatever
+reverse proxy/process manager the host provides, and serve
 the frontend's `npm run build` output (`frontend-dashboard/dist/`) via any
 static file server. Set `DEBUG=false` and `APP_ENV=production` in
 `backend/.env` — the code defaults to `debug=False` already, so this only

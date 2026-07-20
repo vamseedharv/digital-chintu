@@ -24,7 +24,7 @@ finding fixed — see [CHANGELOG.md](CHANGELOG.md)'s `[0.2.0]` entry and
 | 005 Frontend Framework | ✅ Done (application shell, routing, component library) |
 | 006 Theme Engine | ✅ Core done (custom spacing scale and broader component library deferred to real UI features that need them) |
 | 007 Dashboard | ✅ Done (added after the freeze — widget-hosting home screen, see docs/features/007_Dashboard.md) |
-| 008 Settings | ❌ Not started (env-var config only, no UI/API) |
+| 008 Settings | ✅ Done (added after the freeze — DB-backed app_name/default_theme overrides, first DB model + Alembic, see docs/features/008_Settings.md) |
 | 009 Assistant Onboarding | ❌ Not started (name is configurable, but no onboarding flow) |
 
 ## Phase 1 — Plugin Framework — ✅ Done
@@ -55,9 +55,11 @@ over text input alone could start independently.
 
 `017_Reminders`, `018_Alarms`, `019_Todo`, `020_Shopping_List`, `021_Notes`,
 `022_Google_Calendar`. **Reminders/Alarms are the first features that need
-the scheduler** (`backend/app/core/scheduler.py`, wired but idle) and the
-first database models (nothing exists in `backend/app/db/` beyond
-engine/session scaffolding — introduce Alembic at that point, not before).
+the scheduler** (`backend/app/core/scheduler.py`, wired but idle). Database
+models and Alembic already exist (`008_Settings` introduced them ahead of
+schedule — see [BACKLOG.md](BACKLOG.md)'s "Resolved ahead of schedule");
+this phase adds the first *new* models on top of that same setup, not a
+fresh introduction of migration tooling.
 
 ## Phase 5 — Media & Info
 

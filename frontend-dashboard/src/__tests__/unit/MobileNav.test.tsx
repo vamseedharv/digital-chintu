@@ -90,11 +90,14 @@ describe('MobileNav', () => {
       </MemoryRouter>,
     )
 
-    // Only two focusable elements exist: the close button (focused on open)
-    // and the Home link. Tabbing once should land on Home; tabbing again
-    // should wrap back to the close button instead of leaving the drawer.
+    // Focusable elements: the close button (focused on open), then the
+    // Home and Settings nav links. Tabbing through all of them should wrap
+    // back to the close button instead of leaving the drawer.
     await user.tab()
     expect(screen.getByRole('link', { name: /home/i })).toHaveFocus()
+
+    await user.tab()
+    expect(screen.getByRole('link', { name: /settings/i })).toHaveFocus()
 
     await user.tab()
     expect(screen.getByRole('button', { name: 'Close navigation' })).toHaveFocus()
@@ -110,8 +113,8 @@ describe('MobileNav', () => {
     )
 
     // Starts on the close button (focused on open); Shift+Tab should wrap
-    // to the last focusable element (Home) instead of leaving the drawer.
+    // to the last focusable element (Settings) instead of leaving the drawer.
     await user.tab({ shift: true })
-    expect(screen.getByRole('link', { name: /home/i })).toHaveFocus()
+    expect(screen.getByRole('link', { name: /settings/i })).toHaveFocus()
   })
 })

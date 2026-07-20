@@ -59,7 +59,10 @@ wherever a navigation action must be a real link, e.g. 404/error pages'
 `Spinner` (accessible loading indicator, `role="status"`), `Skeleton`
 (visual loading placeholder, `aria-hidden`), `EmptyState` (icon + heading +
 description + action — used by 404/error pages, reusable for future "no
-data yet" states), `Heading`, `Text`.
+data yet" states), `Heading`, `Text`, `TextField`/`SelectField` (the first
+form primitives — labeled input/select with `useId()`-based label
+association, optional description, and an error state with
+`aria-invalid`/`role="alert"`; added for the Settings form, `008_Settings`).
 
 `frontend-dashboard/src/components/layout/`: `PageContainer` (consistent
 max-width/padding — `max-w-5xl`, widened from `max-w-2xl` for the
@@ -115,7 +118,8 @@ actual screen reader — that still needs a human pass.
 ## Not implemented yet
 
 No custom spacing scale (Tailwind's default is sufficient so far) — the
-Dashboard needed a shared tile shell (`WidgetCard`, listed above) but
-nothing beyond Tailwind's existing spacing tokens. Extract further shared
-primitives once another real UI feature (Settings, Notifications) needs
-them — see [ROADMAP.md](../../ROADMAP.md)'s Phase 6.
+Dashboard and Settings each needed a shared primitive (`WidgetCard`,
+`TextField`/`SelectField`) but nothing beyond Tailwind's existing spacing
+tokens. Extract further shared primitives once another real UI feature
+(Notifications, and later Settings itself as more managed settings arrive)
+needs them — see [ROADMAP.md](../../ROADMAP.md)'s Phase 6.

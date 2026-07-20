@@ -31,6 +31,28 @@ test('dashboard shows the greeting and widget grid', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Shopping list' })).toBeVisible()
 })
 
+test('settings page updates the assistant name and it persists on reload', async ({ page }) => {
+  await page.goto('/settings')
+
+  const nameInput = page.getByLabel('Assistant name')
+  const originalName = await nameInput.inputValue()
+
+  await nameInput.fill('E2E Test Assistant')
+  await page.getByRole('button', { name: 'Save' }).click()
+  await expect(page.getByText('Saved.')).toBeVisible()
+
+  await page.reload()
+  await expect(page.getByLabel('Assistant name')).toHaveValue('E2E Test Assistant')
+
+  // Restore the original value — the backend this test drives against is a
+  // real dev database (not sandboxed like the unit/integration suites), so
+  // leaving the rename in place would make this test non-idempotent and
+  // pollute the app name for anyone running the app locally afterward.
+  await page.getByLabel('Assistant name').fill(originalName)
+  await page.getByRole('button', { name: 'Save' }).click()
+  await expect(page.getByText('Saved.')).toBeVisible()
+})
+
 test('theme toggle switches between light and dark mode', async ({ page }) => {
   await page.goto('/')
 

@@ -4,6 +4,14 @@ Two things, both verified against the actual code (grepped, not assumed) as
 of 2026-07-09: internal module dependencies (what's enforced by
 `import-linter`) and external package dependencies (what's installed).
 
+**Not yet reconciled with `007_Dashboard`/`010_Plugin_Framework`/
+`008_Settings`** — the internal-dependency graphs below predate all three
+and don't show `app.core.plugins`, `app.api.v1.endpoints.{plugins,settings}`,
+`app.domain/services/repositories.settings*`, `app.db.models`, or the
+frontend's `components/dashboard/`. The external dependency tables *are*
+current (alembic added below). Full reconciliation of the internal graphs
+is a separate pass, not done as a side effect of this feature.
+
 ## Internal — backend (`backend/app/`)
 
 ```
@@ -88,6 +96,7 @@ never fires, since the default resolver can't resolve TS imports at all.
 | pydantic-settings | `>=2.5,<3.0` | Env-var-driven config (`core/config.py`) |
 | sqlalchemy | `>=2.0,<3.0` | ORM / DB engine (`db/`) |
 | apscheduler | `>=3.10,<4.0` | Background job scheduler (`core/scheduler.py`), no jobs yet |
+| alembic | `>=1.13,<2.0` | Database migrations (`alembic/`) — added for `008_Settings`, the first feature needing real persistence |
 
 Dev-only (`[project.optional-dependencies].dev`):
 

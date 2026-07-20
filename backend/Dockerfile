@@ -17,6 +17,8 @@ RUN mkdir app && touch app/__init__.py \
     && rm -rf app
 
 COPY app ./app
+COPY alembic.ini ./
+COPY alembic ./alembic
 
 # Re-install the local package (no network needed, dependencies are already
 # in place) so the real application code takes effect.
@@ -30,4 +32,7 @@ USER chintu
 
 EXPOSE 8000
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Migrate then serve — a separate step, not baked into app startup code, so
+# it runs exactly once per container start regardless of how many workers
+# uvicorn spawns (see docs/architecture/03_DATABASE_DESIGN.md).
+CMD ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"]

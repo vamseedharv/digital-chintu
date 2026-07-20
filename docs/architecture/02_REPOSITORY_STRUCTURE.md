@@ -10,12 +10,14 @@ what, and what's enforced), see [DEPENDENCY_GRAPH.md](../../DEPENDENCY_GRAPH.md)
 backend/               FastAPI backend
   app/
     main.py             app factory (entrypoint: app.main:app)
-    api/v1/              routers + endpoints
-    core/                config.py, logging.py, scheduler.py (APScheduler, wired but idle)
-    domain/               empty — framework-independent entities (future)
-    services/             empty — application logic (future)
-    repositories/          empty — data access (future)
-    db/                    SQLAlchemy engine/session, declarative base
+    api/v1/              routers + endpoints (health, config, plugins, settings) + deps.py
+    core/                config.py, logging.py, scheduler.py (APScheduler, wired but idle), validation.py
+    domain/               settings.py (SettingKey, EffectiveSettings) — otherwise empty
+    services/             settings_service.py — otherwise empty
+    repositories/          settings_repository.py — otherwise empty
+    db/                    SQLAlchemy engine/session, declarative base, models.py (SettingModel)
+  alembic/               migrations (see docs/architecture/03_DATABASE_DESIGN.md)
+  alembic.ini            alembic config — sqlalchemy.url is set at runtime by alembic/env.py, not read from here
   tests/
     unit/                 isolated tests of one module
     integration/           tests of the wired-up app via TestClient
@@ -27,7 +29,7 @@ frontend-dashboard/    React + TypeScript + Vite + Tailwind web dashboard
     api/                  fetch client + typed calls + hooks
     app/                   composition root: AppShell, router, navigation
     routes/                 page components (DashboardPage, NotFoundPage, ErrorPage)
-    components/ui/           presentational primitives (Button, Card, ...)
+    components/ui/           presentational primitives (Button, Card, TextField, SelectField, ...)
     components/layout/        Sidebar, MobileNav, NavLinks, PageContainer
     components/               feature components (HealthStatus, ThemeToggle)
     components/dashboard/      WidgetCard + widgets built on it (Greeting, Clock, Placeholder)
@@ -59,9 +61,10 @@ docker-compose.yml     runs backend + frontend-dashboard together
   `Dockerfile` and lockfile. Nothing shared between them yet — that's what
   `shared/` is reserved for.
 - **`domain/` / `services/` / `repositories/` / `db/`** inside `backend/app/`:
-  Clean Architecture layers, kept as separate empty packages (rather than
-  added later) so the first real feature has an unambiguous, pre-agreed
-  place to land instead of prompting a restructuring decision mid-feature.
+  Clean Architecture layers, originally kept as separate empty packages so
+  the first real feature had an unambiguous, pre-agreed place to land
+  instead of prompting a restructuring decision mid-feature — `008_Settings`
+  was that first feature, landing one module in each.
 - **`tests/unit/` vs `tests/integration/`** (both backend and frontend): unit
   tests isolate one module (mock/monkeypatch its dependencies); integration
   tests exercise the real app wiring (`TestClient(create_app())`, or the full

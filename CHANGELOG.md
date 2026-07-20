@@ -87,6 +87,56 @@ still open on top of this.
 - E2E: `tests/e2e/smoke.spec.ts` gained a test asserting the greeting and
   every widget tile render on a real page load.
 
+- Settings (`008_Settings`): `app_name` and `default_theme` are now
+  DB-backed and writable at runtime, via a new Settings page in the
+  dashboard and `GET`/`PATCH /api/v1/settings`. **This is the app's first
+  real persistence** — a `settings` key/value table (`backend/app/db/models.py`'s
+  `SettingModel`) and Alembic (`backend/alembic/`), introduced ahead of the
+  originally-planned Phase 4 (`017_Reminders`) because a Settings feature
+  that can't durably persist a change isn't one — see
+  `docs/architecture/03_DATABASE_DESIGN.md` for the full reasoning and
+  `BACKLOG.md`'s "Resolved ahead of schedule". `GET /api/v1/health` and
+  `GET /api/v1/config` now resolve through the same effective-settings
+  layer, so an override is reflected everywhere, not just by the new
+  endpoint.
+- Backend: `domain/settings.py` (`SettingKey`, `EffectiveSettings`),
+  `repositories/settings_repository.py`, `services/settings_service.py`,
+  `api/v1/endpoints/settings.py`, `api/v1/deps.py` (new shared dependency
+  providers) — the first real modules in what were previously empty
+  `domain`/`services`/`repositories` packages. `core/validation.py`
+  extracts the short-text validator `core/config.py` already had, now
+  shared with the settings API schema.
+- Migrations run as an explicit step before the app starts (`alembic
+  upgrade head && <serve>`), not from inside FastAPI's lifespan — wired
+  into `Makefile`'s `backend-dev`, the backend `Dockerfile`'s `CMD`, and
+  `tests/playwright.config.ts`'s webServer command. See
+  `docs/architecture/03_DATABASE_DESIGN.md`'s "Migrations" for why.
+- Frontend: `components/ui/TextField.tsx`/`SelectField.tsx` (the first form
+  primitives), `api/settings.ts`/`useSettings.ts`, `routes/SettingsPage.tsx`,
+  a new "Settings" nav item/route.
+- Backend tests: `test_validation.py`, `test_settings_repository.py`,
+  `test_settings_service.py`, `test_migrations.py` (runs the real `alembic`
+  CLI against a throwaway DB), `test_settings_api.py` (persistence
+  round-trips, partial updates, validation, and the cross-endpoint
+  consistency check against `/health`/`/config`). `tests/conftest.py`
+  gained `make_test_client()`/`db_session` — every existing test that built
+  its own `TestClient(create_app())` now goes through the former so no test
+  can read or write the developer's real `backend/data/chintu.db`.
+- Frontend tests: `TextField.test.tsx`, `SelectField.test.tsx`,
+  `useSettings.test.ts`, `SettingsPage.test.tsx`, plus a navigation
+  assertion in `App.test.tsx`. Two `MobileNav.test.tsx` focus-trap
+  assertions updated for the new second nav item.
+- E2E: a settings round-trip test (changes the assistant name, reloads,
+  confirms it persisted, then restores the original value since this test
+  drives the real dev database, not a sandboxed one).
+
+**Known gap, not fixed here**: `ThemeProvider` doesn't consume the (now
+writable) `default_theme` setting — only `localStorage`/OS preference.
+Changing it via Settings persists correctly but has no visible effect on a
+fresh browser's initial theme yet; tracked in `BACKLOG.md`. See
+`docs/features/008_Settings.md` for what else is deliberately out of scope
+(`wake_word`/`default_language`, per-user overrides, live cross-tab sync).
+
 ## [0.2.0] - 2026-07-09
 
 **Foundation frozen.** UI Framework built, then reviewed twice (a UI-specific

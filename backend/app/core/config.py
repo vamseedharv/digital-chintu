@@ -7,6 +7,8 @@ from functools import lru_cache
 from pydantic import ValidationInfo, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from app.core.validation import validate_short_text
+
 _LANGUAGE_TAG_RE = re.compile(r"[a-z]{2,3}(-[A-Z]{2})?")
 
 
@@ -70,12 +72,7 @@ class Settings(BaseSettings):
     @field_validator("app_name", "wake_word")
     @classmethod
     def _not_blank(cls, value: str, info: ValidationInfo) -> str:
-        stripped = value.strip()
-        if not stripped:
-            raise ValueError(f"{info.field_name} must not be blank")
-        if len(stripped) > 64:
-            raise ValueError(f"{info.field_name} must be 64 characters or fewer")
-        return stripped
+        return validate_short_text(value, info.field_name or "value")
 
     @field_validator("default_language")
     @classmethod

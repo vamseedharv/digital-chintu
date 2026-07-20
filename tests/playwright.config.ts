@@ -29,7 +29,11 @@ export default defineConfig({
   // scripts/setup.ps1) and frontend-dashboard dependencies to be installed.
   webServer: [
     {
-      command: `"${backendPython}" -m uvicorn app.main:app --port 8000`,
+      // Migrate first — same "migrate then serve" order as the Makefile's
+      // backend-dev target and the Docker image's CMD (see
+      // docs/architecture/03_DATABASE_DESIGN.md). A fresh checkout's DB has
+      // no tables until this runs.
+      command: `"${backendPython}" -m alembic upgrade head && "${backendPython}" -m uvicorn app.main:app --port 8000`,
       cwd: path.join(__dirname, '../backend'),
       url: `${BACKEND_URL}/api/v1/health`,
       reuseExistingServer: !process.env.CI,

@@ -70,8 +70,9 @@ Without `make`:
 ```bash
 # Terminal 1
 cd backend
+.venv\Scripts\python.exe -m alembic upgrade head    # apply migrations first — Windows
 .venv\Scripts\python.exe -m uvicorn app.main:app --reload   # Windows
-# source .venv/bin/activate && uvicorn app.main:app --reload  # Linux/macOS/RPi
+# source .venv/bin/activate && alembic upgrade head && uvicorn app.main:app --reload  # Linux/macOS/RPi
 
 # Terminal 2
 cd frontend-dashboard

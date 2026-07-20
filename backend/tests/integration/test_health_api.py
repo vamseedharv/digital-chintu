@@ -3,6 +3,7 @@ from fastapi.testclient import TestClient
 
 from app.core.config import get_settings
 from app.main import create_app
+from tests.conftest import make_test_client
 
 
 def test_health_returns_ok(client: TestClient) -> None:
@@ -22,7 +23,7 @@ def test_health_reflects_the_configured_app_name(monkeypatch: pytest.MonkeyPatch
     monkeypatch.setenv("APP_NAME", "Jarvis")
     get_settings.cache_clear()
 
-    client = TestClient(create_app())
+    client = make_test_client(create_app())
     response = client.get("/api/v1/health")
 
     assert response.json()["app_name"] == "Jarvis"
@@ -37,7 +38,7 @@ def test_unknown_route_returns_404(client: TestClient) -> None:
 def test_cors_allows_a_configured_origin(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("CORS_ORIGINS", "http://allowed.test")
     get_settings.cache_clear()
-    client = TestClient(create_app())
+    client = make_test_client(create_app())
 
     response = client.get("/api/v1/health", headers={"Origin": "http://allowed.test"})
 
@@ -47,7 +48,7 @@ def test_cors_allows_a_configured_origin(monkeypatch: pytest.MonkeyPatch) -> Non
 def test_cors_rejects_an_unconfigured_origin(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("CORS_ORIGINS", "http://allowed.test")
     get_settings.cache_clear()
-    client = TestClient(create_app())
+    client = make_test_client(create_app())
 
     response = client.get("/api/v1/health", headers={"Origin": "http://not-allowed.test"})
 

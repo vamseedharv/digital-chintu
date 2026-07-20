@@ -1,7 +1,8 @@
 # 04 API Guidelines
 
-Status: **two endpoints implemented** — conventions below are what they follow;
-apply the same conventions as new endpoints are added.
+Status: **four endpoint modules implemented** (`health`, `config`, `plugins`,
+`settings`) — conventions below are what they follow; apply the same
+conventions as new endpoints are added.
 
 ## REST
 
@@ -9,18 +10,24 @@ apply the same conventions as new endpoints are added.
   `API_V1_PREFIX`, but there's no reason to change it — it exists so a future
   `/api/v2` can be introduced without breaking `/v1` clients).
 - Endpoint modules live in `backend/app/api/v1/endpoints/`, one file per
-  resource, aggregated by `backend/app/api/v1/router.py`.
+  resource, aggregated by `backend/app/api/v1/router.py`. Shared FastAPI
+  dependency providers (things multiple endpoint modules inject via
+  `Depends(...)`) live in `backend/app/api/v1/deps.py` — e.g.
+  `get_settings_service`, used by `settings.py` and now also `health.py`/
+  `config.py` so all three resolve the same effective values.
 - Responses are plain JSON with `snake_case` keys (matches Python/Pydantic
   convention; see `docs/architecture/02_REPOSITORY_STRUCTURE.md` for the
   naming-consistency note about the frontend consuming this as-is).
 - The health endpoint (`GET /api/v1/health`) returns a bare `dict[str, str]`
   rather than a Pydantic `response_model` — fine for an endpoint with no real
-  schema to document. `GET /api/v1/config` (`endpoints/config.py`, added for
-  the configuration system) is the first endpoint with an actual fixed
-  shape and uses a `response_model` (`RuntimeConfigResponse`), so FastAPI's
-  generated OpenAPI schema (`/openapi.json`) documents it accurately — the
-  pattern the health endpoint was always meant to hand off to once one
-  existed (see [BACKLOG.md](../../BACKLOG.md)).
+  schema to document. Every other endpoint has a real `response_model`
+  (`RuntimeConfigResponse`, `PluginInfo`, `SettingsResponse`), so FastAPI's
+  generated OpenAPI schema (`/openapi.json`) documents them accurately.
+- Writes use `PATCH` with a partial-update body (`SettingsUpdate` — every
+  field optional, omitted means "don't change this"), not `PUT`: `008_Settings`
+  is the first endpoint that writes anything, and a partial update is the
+  right shape for "change just the theme, leave the name alone." Validation
+  failures return FastAPI's standard `422` and persist nothing.
 - CORS is restrictive by default (`CORS_ORIGINS`, comma-separated allow-list
   — no wildcard), configured in `backend/app/main.py`.
 

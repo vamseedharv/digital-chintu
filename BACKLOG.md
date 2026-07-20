@@ -15,13 +15,33 @@ section; not dated commitments.
   plugin in it; `041_Home_Assistant`/`042_Device_Control` are what will
   eventually use this.
 
+## Resolved ahead of schedule
+
+- [x] ~~Introduce the first SQLAlchemy model and Alembic at the same time —
+  not before~~. **Superseded**: `008_Settings` needed real persistence to be
+  a working feature (a Settings page that can't durably save anything isn't
+  one), so it — not `017_Reminders` (Phase 4) — became the first real DB
+  model and introduced Alembic. This was an explicit decision, not a silent
+  one; see `docs/features/008_Settings.md` and
+  `docs/architecture/03_DATABASE_DESIGN.md` for the full reasoning. Phase 4
+  now reuses this same Alembic setup rather than introducing it fresh.
+
 ## Before Phase 4 (Productivity) starts
 
 - [ ] Register the first APScheduler job and confirm the scheduler survives
   process restarts / app reloads as expected (`backend/app/core/scheduler.py`
   is wired but has never run a real job).
-- [ ] Introduce the first SQLAlchemy model and Alembic at the same time —
-  not before, per `docs/architecture/01_SYSTEM_ARCHITECTURE.md`.
+
+## Before Phase 2 (Voice Pipeline) or another theme-affecting feature starts
+
+- [ ] Wire `frontend-dashboard/src/theme/ThemeProvider.tsx` to actually
+  consume the backend's `default_theme` setting (now writable via
+  `GET`/`PATCH /api/v1/settings`, see `docs/features/008_Settings.md`).
+  Today `ThemeProvider` only checks `localStorage` then OS
+  `prefers-color-scheme` — changing `default_theme` persists correctly but
+  has no visible effect on a fresh browser's initial theme. Predates 008;
+  deliberately not fixed under that feature's banner since it's a separate,
+  bounded async-bootstrap change to already-tested core theming code.
 
 ## Verification gaps (environment-blocked, not skipped)
 
@@ -69,8 +89,6 @@ section; not dated commitments.
 
 - [ ] `docs/guides/Prompt_Usage.md` and `docs/guides/Release_Process.md` are
   still one-line stubs — fill in when there's a real process to document.
-- [ ] `docs/architecture/03_DATABASE_DESIGN.md` and `05_PLUGIN_SDK.md` are
-  still one-line stubs — nothing to document until models/plugins exist.
 - [ ] No `CODEOWNERS` — low priority until there's more than one regular
   contributor. (`CONTRIBUTING.md` now exists at the repo root.)
 - [ ] `docs/MASTER_EXECUTION_PLAN.md` has been referenced by name in prior
