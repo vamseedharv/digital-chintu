@@ -143,15 +143,24 @@ def _client_with_plugins_dir(
     return make_test_client(create_app())
 
 
-def test_plugins_endpoint_returns_empty_list_with_no_plugins_installed(
+def test_plugins_endpoint_lists_the_reference_hello_plugin(
     client: TestClient,
 ) -> None:
-    # Default PLUGINS_DIR (repo-root plugins/) has no subdirectories today —
-    # the common case until 041/042 exist.
+    # Default PLUGINS_DIR (repo-root plugins/) contains only the trivial
+    # hello-plugin reference implementation today — see plugins/README.md.
     response = client.get("/api/v1/plugins")
 
     assert response.status_code == 200
-    assert response.json() == []
+    assert response.json() == [
+        {"slug": "hello-plugin", "name": "Hello Plugin", "version": "0.1.0", "enabled": True}
+    ]
+
+
+def test_the_reference_hello_plugins_router_is_reachable(client: TestClient) -> None:
+    response = client.get("/api/v1/plugins/hello-plugin/hello")
+
+    assert response.status_code == 200
+    assert response.json() == {"message": "Hello from the reference plugin!"}
 
 
 def test_plugins_endpoint_lists_a_discovered_and_enabled_plugin(

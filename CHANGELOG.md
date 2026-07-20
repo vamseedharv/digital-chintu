@@ -57,10 +57,15 @@ wake-word engine, an AI router, or reminders themselves). See
   routing, a broken plugin not blocking startup, and lifespan startup/
   shutdown hooks including failure isolation.
 
-No real plugin exists yet — this is the extension point only. See
-`docs/features/010_Plugin_Framework.md` (Status: Done) and
-`docs/features/041_Home_Assistant.md`/`042_Device_Control.md` for what's
-still open on top of this.
+- `plugins/hello-plugin`: a trivial reference plugin (one `GET /hello`
+  route, no startup/shutdown behavior) proving the discovery/registration
+  mechanism end-to-end on disk — not a real integration. Backend tests
+  updated to reflect it: `GET /api/v1/plugins` now lists it by default and
+  its route is exercised directly (`tests/integration/test_plugins_api.py`).
+
+See `docs/features/010_Plugin_Framework.md` (Status: Done) and
+`docs/features/041_Home_Assistant.md`/`042_Device_Control.md` for the real
+integration plugins still planned on top of this extension point.
 
 - Dashboard (`007_Dashboard`): the home route (`/`) is now a real
   widget-hosting screen instead of the diagnostic-only page it was.

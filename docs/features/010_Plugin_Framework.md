@@ -8,9 +8,11 @@ implemented: `backend/app/core/plugins.py` (`Plugin`, `PluginMetadata`,
 `discover_plugins()`, `register_plugins()`), new `PLUGINS_DIR`/
 `ENABLED_PLUGINS` settings, lifespan-integrated startup/shutdown hooks in
 `main.py`, `GET /api/v1/plugins`, and a `docker-compose.yml` bind mount for
-`plugins/`. **No real plugin exists yet** — `plugins/` still has no
-subdirectories; this is the framework `041_Home_Assistant` and
-`042_Device_Control` will build on, both still not started.
+`plugins/`. `plugins/hello-plugin` ships as a trivial reference plugin
+proving the mechanism end-to-end (one `GET /hello` route, no real
+behavior) — this is the framework `041_Home_Assistant` and
+`042_Device_Control` will build on for a real integration, both still not
+started.
 
 ## Objective
 
@@ -127,15 +129,14 @@ deny-by-default).
 
 ## Manual QA
 
-1. Drop a minimal fixture plugin into `plugins/` locally, confirm `make
-   backend-dev` picks it up.
-2. Hit its mounted route directly.
-3. Confirm `GET /api/v1/plugins` lists it.
-4. Remove it, confirm a clean restart with an empty `plugins/` still works
-   (today's default state) — this is the common case until `041`/`042`
-   exist.
-5. Repeat steps 1-4 against `docker compose up --build` once the bind mount
-   is added.
+1. Run `make backend-dev`, confirm the checked-in `plugins/hello-plugin`
+   reference plugin is picked up.
+2. Hit its mounted route directly: `GET /api/v1/plugins/hello-plugin/hello`.
+3. Confirm `GET /api/v1/plugins` lists it (`enabled: true`).
+4. Remove it (or point `PLUGINS_DIR` elsewhere), confirm a clean restart
+   with an empty `plugins/` still works — the common case until a real
+   integration plugin (`041`/`042`) exists.
+5. Repeat steps 1-4 against `docker compose up --build`.
 
 ## Acceptance Criteria
 
@@ -157,11 +158,13 @@ deny-by-default).
 - `GET /api/v1/plugins` (`backend/app/api/v1/endpoints/plugins.py`).
 - `docker-compose.yml`: `./plugins:/app/plugins:ro` bind mount,
   `PLUGINS_DIR`/`ENABLED_PLUGINS` env vars.
-- Backend tests: `tests/unit/test_plugins.py` (13 tests — discovery,
-  duplicate-slug failure, broken/invalid plugins skipped, version and
-  allow-list gating, router registration) and
-  `tests/integration/test_plugins_api.py` (10 tests — empty/populated
-  listing, mounted routing, disabled-plugin gating, a broken plugin not
+- `plugins/hello-plugin/plugin.py`: trivial reference plugin (metadata +
+  one `GET /hello` route) proving the mechanism end-to-end on disk.
+- Backend tests: `tests/unit/test_plugins.py` (discovery, duplicate-slug
+  failure, broken/invalid plugins skipped, version and allow-list gating,
+  router registration) and `tests/integration/test_plugins_api.py`
+  (populated listing against the real `plugins/hello-plugin` reference
+  plugin, mounted routing, disabled-plugin gating, a broken plugin not
   blocking startup, and lifespan startup/shutdown hooks including failure
   isolation). 98% backend statement coverage; the remaining gap is the
   `Plugin` base class's no-op default methods and one defensive
