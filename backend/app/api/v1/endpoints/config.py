@@ -1,9 +1,10 @@
 """Read-only runtime configuration — the non-secret subset of `Settings`
 that a client needs to bootstrap against (assistant identity, defaults),
-the same role `/health` already plays for `app_name`. `app_name` and
-`default_theme` reflect any DB-backed override from `GET /api/v1/settings`
-(see app/services/settings_service.py) — `wake_word` and `default_language`
-don't have overrides yet and always report the env-driven default."""
+the same role `/health` already plays for `app_name`. `app_name`,
+`default_theme`, and `wake_word` reflect any DB-backed override from
+`GET /api/v1/settings` (see app/services/settings_service.py) —
+`default_language` doesn't have an override yet and always reports the
+env-driven default."""
 
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
@@ -31,7 +32,7 @@ def get_runtime_config(
     effective = service.get_effective_settings()
     return RuntimeConfigResponse(
         app_name=effective.app_name,
-        wake_word=settings.wake_word,
+        wake_word=effective.wake_word,
         default_theme=effective.default_theme.value,
         default_language=settings.default_language,
         environment=settings.app_env.value,

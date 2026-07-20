@@ -14,9 +14,15 @@ def test_defaults_are_safe_for_an_unconfigured_deployment() -> None:
     assert settings.debug is False
     assert settings.api_v1_prefix == "/api/v1"
     assert settings.database_url == "sqlite:///./data/chintu.db"
-    assert settings.wake_word == "Hey Chintu"
+    # None means "not pinned" — the effective phrase is derived from
+    # app_name by app/services/settings_service.py instead.
+    assert settings.wake_word is None
     assert settings.default_theme == "system"
     assert settings.default_language == "en-US"
+    assert settings.wake_word_model == "hey_jarvis"
+    assert settings.wake_word_sensitivity == 0.5
+    assert settings.wake_word_preroll_seconds == 1.0
+    assert settings.voice_audio_device == ""
 
 
 @pytest.mark.parametrize(
@@ -96,6 +102,33 @@ def test_blank_assistant_identity_fields_are_rejected(field: str) -> None:
 def test_overly_long_wake_word_is_rejected() -> None:
     with pytest.raises(ValidationError):
         Settings(_env_file=None, wake_word="x" * 65)  # type: ignore[call-arg]
+
+
+def test_wake_word_settings_are_overridable_via_environment_variables(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("WAKE_WORD_MODEL", "alexa")
+    monkeypatch.setenv("WAKE_WORD_SENSITIVITY", "0.8")
+    monkeypatch.setenv("WAKE_WORD_PREROLL_SECONDS", "2.5")
+    monkeypatch.setenv("VOICE_AUDIO_DEVICE", "USB Microphone")
+
+    settings = Settings(_env_file=None)  # type: ignore[call-arg]
+
+    assert settings.wake_word_model == "alexa"
+    assert settings.wake_word_sensitivity == 0.8
+    assert settings.wake_word_preroll_seconds == 2.5
+    assert settings.voice_audio_device == "USB Microphone"
+
+
+@pytest.mark.parametrize("sensitivity", [-0.1, 1.1])
+def test_wake_word_sensitivity_out_of_range_is_rejected(sensitivity: float) -> None:
+    with pytest.raises(ValidationError):
+        Settings(_env_file=None, wake_word_sensitivity=sensitivity)  # type: ignore[call-arg]
+
+
+def test_blank_wake_word_model_is_rejected() -> None:
+    with pytest.raises(ValidationError):
+        Settings(_env_file=None, wake_word_model="   ")  # type: ignore[call-arg]
 
 
 @pytest.mark.parametrize("invalid_tag", ["english", "EN", "en_US", "en-us", ""])

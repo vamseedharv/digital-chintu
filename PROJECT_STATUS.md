@@ -1,6 +1,6 @@
 # Project Status
 
-Snapshot as of **2026-07-09** (`v0.2.0` — see [CHANGELOG.md](CHANGELOG.md)).
+Snapshot as of **2026-07-20** (`v0.2.0` — see [CHANGELOG.md](CHANGELOG.md)).
 For where this is headed, see [ROADMAP.md](ROADMAP.md) and
 [BACKLOG.md](BACKLOG.md). For a point-in-time build/lint/test verification
 of this exact snapshot, see [REPO_HEALTH_REPORT.md](REPO_HEALTH_REPORT.md).
@@ -26,21 +26,25 @@ key (`onboarding_complete`), skippable and re-runnable, not a one-time gate.
 
 **Phase 0 is now fully closed** (001 through 009 all ✅ Done, save `004`'s
 two narrow, non-blocking, now-tracked gaps — see
-[ROADMAP.md](ROADMAP.md)'s Phase 0 table). No reminders, voice, AI, or media
+[ROADMAP.md](ROADMAP.md)'s Phase 0 table). No reminders, AI, or media
 integrations exist yet, and no real plugin has been built on top of the
-plugin extension point. Phase 1 (Plugin Framework) is done; Phase 2 (Voice
-Pipeline) is next per [ROADMAP.md](ROADMAP.md).
+plugin extension point. Phase 1 (Plugin Framework) is done. **Phase 2
+(Voice Pipeline) has started**: `011_Wake_Word` integrates OpenWakeWord as
+an opt-in capability (`backend/app/core/voice/`) — the backend always boots
+safely without it, with a documented push-to-talk fallback
+(`POST /api/v1/wake-word/trigger`) always available regardless of hardware.
+`012_Speech_To_Text` onward haven't started per [ROADMAP.md](ROADMAP.md).
 
 ## What exists today
 
 | Area | State |
 |---|---|
-| Backend | FastAPI app factory, Clean Architecture layer folders (`api/core/domain/services/repositories/db`), typed/validated env-driven config (assistant name, wake word, theme, language, dev/prod profiles — see `docs/architecture/01_SYSTEM_ARCHITECTURE.md`), structured logging, APScheduler (wired, no jobs), a plugin extension point (discovery/interface/dynamic router registration, no real plugin yet — `docs/architecture/05_PLUGIN_SDK.md`), a settings domain (DB-backed `app_name`/`default_theme`/`onboarding_complete` overrides — `docs/architecture/03_DATABASE_DESIGN.md`), four endpoint modules (`/api/v1/health`, `/api/v1/config`, `/api/v1/plugins`, `/api/v1/settings`) — all added since the `v0.2.0` freeze, not yet part of a tagged release |
-| Frontend | React + TypeScript + Vite + Tailwind v4 — application shell (`app/`: `AppShell`, router, nav, onboarding-redirect gate), routed pages (`routes/`: **dashboard** (widget grid: greeting, clock, health check, placeholder tiles — `components/dashboard/`), **settings** (`SettingsPage`, `TextField`/`SelectField`), **onboarding** (`OnboardingPage` — full-screen, sibling of `AppShell`), 404, error), a reusable component library (`components/ui/`, `components/layout/`), dark/light theme (persisted) |
+| Backend | FastAPI app factory, Clean Architecture layer folders (`api/core/domain/services/repositories/db`), typed/validated env-driven config (assistant name, wake word, theme, language, dev/prod profiles — see `docs/architecture/01_SYSTEM_ARCHITECTURE.md`), structured logging, APScheduler (wired, no jobs), a plugin extension point (discovery/interface/dynamic router registration, no real plugin yet — `docs/architecture/05_PLUGIN_SDK.md`), an opt-in wake-word runtime (`core/voice/`, OpenWakeWord — always degrades gracefully without it installed, push-to-talk fallback always available — `docs/features/011_Wake_Word.md`), a settings domain (DB-backed `app_name`/`default_theme`/`onboarding_complete`/`wake_word_enabled` overrides — `docs/architecture/03_DATABASE_DESIGN.md`), five endpoint modules (`/api/v1/health`, `/api/v1/config`, `/api/v1/plugins`, `/api/v1/settings`, `/api/v1/wake-word`) — all added since the `v0.2.0` freeze, not yet part of a tagged release |
+| Frontend | React + TypeScript + Vite + Tailwind v4 — application shell (`app/`: `AppShell`, router, nav, onboarding-redirect gate), routed pages (`routes/`: **dashboard** (widget grid: greeting, clock, health check, placeholder tiles — `components/dashboard/`), **settings** (`SettingsPage`, `TextField`/`SelectField`), **onboarding** (`OnboardingPage` — full-screen, sibling of `AppShell`), 404, error), a reusable component library (`components/ui/`, `components/layout/`), dark/light theme (persisted). Not touched by `011_Wake_Word` — no frontend surface for it yet. |
 | Database | SQLite via SQLAlchemy, migrated with Alembic — **`settings` table, the first real model** (`docs/architecture/03_DATABASE_DESIGN.md`) |
-| Docker | Both services containerized, multi-arch, healthchecked, resource-limited, wired via `docker-compose.yml`; backend image now runs `alembic upgrade head` before serving |
+| Docker | Both services containerized, multi-arch, healthchecked, resource-limited, wired via `docker-compose.yml`; backend image now runs `alembic upgrade head` before serving. Does not bundle wake-word's optional `voice` dependencies or audio device passthrough — see `docs/architecture/07_DEPLOYMENT.md`. |
 | CI | GitHub Actions: backend (Linux+Windows), frontend (Linux) — lint, type-check, `import-linter` (backend) + `import/no-restricted-paths` (frontend), tests |
-| Tests | 108 backend (unit+integration) + 112 frontend (unit+integration) + 7 E2E — all passing, all added/grown since the `v0.2.0` freeze |
+| Tests | 134 backend (unit+integration) + 112 frontend (unit+integration) + 7 E2E — all passing, all added/grown since the `v0.2.0` freeze |
 | Docs | Architecture docs (`docs/architecture/`) and guides (`docs/guides/`) filled in for what's actually implemented; `CONTRIBUTING.md`/`DEVELOPMENT.md` now exist at the repo root |
 
 ## Test coverage

@@ -9,6 +9,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Wake-word detection (`backend/app/core/voice/`, `011_Wake_Word`): an
+  **opt-in** OpenWakeWord integration (`pip install '.[voice]'` —
+  `openwakeword`, `onnxruntime`, `sounddevice`, `numpy` — deliberately not
+  a base dependency, since it's not guaranteed to have prebuilt wheels on
+  every Raspberry Pi and needs a real microphone unavailable in CI/Docker
+  Desktop on Windows). `WakeWordRuntime` (`app/core/voice/runtime.py`)
+  degrades gracefully to a documented push-to-talk fallback
+  (`POST /api/v1/wake-word/trigger`, always available) whenever the
+  dependencies, model files, or a microphone aren't present — never
+  crashes the backend. `GET /api/v1/wake-word/status` reports why.
+  `app/core/voice/events.py`'s `wake_word_events` pub/sub bus is the
+  `012_STT` handoff contract: a `WakeWordEvent` (with a short pre-roll
+  audio buffer for real detections) is published on every wake, and `012`
+  will subscribe to it without touching any code in this feature.
+- `wake_word_enabled` (new DB-managed setting, `008_Settings` pattern,
+  default `true`) toggles the wake-word runtime on/off via
+  `GET`/`PATCH /api/v1/settings`, read once at startup. The *effective*
+  wake phrase (`wake_word` on `/config`/`/settings`) is now derived as
+  `"Hey {app_name}"` from the (possibly DB-overridden) assistant name
+  instead of a static `"Hey Chintu"` default, unless an operator pins an
+  exact phrase via the (now-optional) `WAKE_WORD` env var — closes a gap
+  `008_Settings`-era tests already flagged.
+- Resource-benchmark notes for wake-word detection added to
+  `docs/architecture/07_DEPLOYMENT.md`'s new "Voice / Wake Word" section
+  (Raspberry Pi sizing guidance, Docker/mic-passthrough platform
+  limitations, model-download requirements) — sourced from the upstream
+  project and community reports, not benchmarked on physical hardware by
+  this feature (none was available).
+- Backend tests: `tests/unit/test_voice_events.py`,
+  `tests/unit/test_voice_runtime.py` (driven by small fake audio/engine
+  implementations — no real hardware or ML model needed; one test
+  exercises the real `ImportError` fail-soft path since the `voice`
+  extras are genuinely absent in CI), `tests/integration/test_wake_word_api.py`.
+  `pytest-asyncio` added as a dev dependency (no prior async test
+  infrastructure existed in this repo). Existing settings/config tests
+  updated for the new/changed response fields.
+
+No STT/TTS/conversation pipeline — this is the first voice-pipeline stage
+only. See `docs/features/011_Wake_Word.md` (Status: Done) and
+`012_STT`/`013_TTS`/`014_Conversation` for what's still open on top of this.
+
 - Configuration system (`backend/app/core/config.py`): typed, validated
   settings on top of the existing `pydantic-settings` base —
   `Environment` (`development`/`testing`/`production`) and `Theme`

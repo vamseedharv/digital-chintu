@@ -40,11 +40,11 @@ it (no compiled/CI-enforced boundary yet — see "Known gaps" below):
 
 | Layer | Path | Today |
 |---|---|---|
-| HTTP interface | `api/v1/` | `router.py` aggregates endpoint routers: `health.py` (liveness), `config.py` (read-only runtime configuration), `settings.py` (read/write settings), `plugins.py` (plugin introspection). `deps.py` holds shared dependency providers (`get_settings_service`). |
-| Cross-cutting | `core/` | `config.py` (pydantic-settings, env-driven), `logging.py` (console + rotating file handler), `scheduler.py` (APScheduler instance, started/stopped via the app's lifespan, no jobs registered yet), `plugins.py` (discovery, `Plugin` contract, dynamic router registration — see [05_PLUGIN_SDK.md](05_PLUGIN_SDK.md)), `validation.py` (small validators shared across Pydantic models) |
+| HTTP interface | `api/v1/` | `router.py` aggregates endpoint routers: `health.py` (liveness), `config.py` (read-only runtime configuration), `settings.py` (read/write settings), `plugins.py` (plugin introspection), `wake_word.py` (wake-word status + push-to-talk trigger). `deps.py` holds shared dependency providers (`get_settings_service`). |
+| Cross-cutting | `core/` | `config.py` (pydantic-settings, env-driven), `logging.py` (console + rotating file handler), `scheduler.py` (APScheduler instance, started/stopped via the app's lifespan, no jobs registered yet), `plugins.py` (discovery, `Plugin` contract, dynamic router registration — see [05_PLUGIN_SDK.md](05_PLUGIN_SDK.md)), `voice/` (`011_Wake_Word`: `events.py`/`audio.py`/`engine.py`/`runtime.py` — an opt-in OpenWakeWord integration that always degrades gracefully; see [docs/features/011_Wake_Word.md](../features/011_Wake_Word.md)), `validation.py` (small validators shared across Pydantic models) |
 | Application logic | `services/` | `settings_service.py` — resolves each managed setting's effective value (DB override or env default) and validates new values (`008_Settings`) |
 | Data access | `repositories/` | `settings_repository.py` — plain key/value reads and writes against the `settings` table |
-| Domain | `domain/` | `settings.py` — `SettingKey` (`app_name`, `default_theme`, `onboarding_complete`), `EffectiveSettings` |
+| Domain | `domain/` | `settings.py` — `SettingKey` (`app_name`, `default_theme`, `onboarding_complete`, `wake_word_enabled`), `EffectiveSettings` |
 | Infrastructure | `db/` | `base.py` (SQLAlchemy `DeclarativeBase`), `session.py` (engine/session factory, `get_db()` FastAPI dependency), `models.py` (`SettingModel`) |
 
 The app factory (`app/main.py`) wires config, logging, CORS middleware, the
@@ -106,15 +106,15 @@ Compose passes variables through from the repo-root `.env` (see
 environment, not baked in at build time (contrast the frontend's `VITE_*`
 vars, inlined at build).
 
-Two of these (`app_name`, `default_theme`) now also have a DB-backed
-override layer on top (`008_Settings`, see
+Three of these (`app_name`, `default_theme`, and now `wake_word`) also have
+a DB-backed override layer on top (`008_Settings`, see
 [03_DATABASE_DESIGN.md](03_DATABASE_DESIGN.md)): `app/services/settings_service.py`
 resolves the *effective* value — the override if one exists, else the env
-default — and every endpoint that reports these two values
+default — and every endpoint that reports these values
 (`/health`, `/config`, `/settings`) reads through that same resolution, so
 they can't disagree with each other. `PATCH /api/v1/settings` is the write
 path; there's still no hot-reload of the underlying env vars themselves,
-only of the two settings this override layer manages.
+only of the settings this override layer manages.
 
 Settings today:
 
@@ -123,27 +123,31 @@ Settings today:
 | App/assistant name | `APP_NAME` | `str` | Non-blank, ≤64 chars. Never hardcoded — flows to `/api/v1/health` and `/api/v1/config`, then the frontend header/tab title. **Now writable at runtime** via `PATCH /api/v1/settings` (env var is just the default before any override). |
 | Environment profile | `APP_ENV` | `Environment` enum (`development`/`testing`/`production`) | Rejects unknown values. `production` + `debug=true` together is a validation error, not just a bad default. |
 | Debug mode | `DEBUG` | `bool` | Defaults `False` regardless of profile — see [06_SECURITY.md](06_SECURITY.md). |
-| Wake word | `WAKE_WORD` | `str` | Non-blank, ≤64 chars. Config value only — no wake-word *detection* engine yet ([011_Wake_Word](../features/011_Wake_Word.md)). Env-only; not managed by 008_Settings. |
+| Wake phrase | `WAKE_WORD` | `str \| None` | Optional exact-phrase pin. Left unset (default), the *effective* value reported by `/config`/`/settings` is derived as `"Hey {app_name}"` instead — see [011_Wake_Word](../features/011_Wake_Word.md). Decoupled from *which acoustic model* listens (`WAKE_WORD_MODEL`, env-only — OpenWakeWord's pretrained models don't include arbitrary names). |
 | Default theme | `DEFAULT_THEME` | `Theme` enum (`light`/`dark`/`system`) | The system-wide default before any per-user override. **Now writable at runtime** via `PATCH /api/v1/settings` — but the frontend's `ThemeProvider` doesn't consume it yet (only `localStorage`/OS preference), a known gap tracked in [BACKLOG.md](../../BACKLOG.md). |
 | Default language | `DEFAULT_LANGUAGE` | `str` | Validated as a BCP-47-style tag (`en`, `en-US`, `hi-IN`) — format only, no actual translation/i18n yet ([032_Multilingual](../features/032_Multilingual.md)). Env-only; not managed by 008_Settings. |
+| Wake-word model, sensitivity, pre-roll, audio device | `WAKE_WORD_MODEL`, `WAKE_WORD_SENSITIVITY`, `WAKE_WORD_PREROLL_SECONDS`, `VOICE_AUDIO_DEVICE` | see `.env.example` | Deployment-level knobs for `011_Wake_Word`'s opt-in detection engine — env-only, same tier as `PLUGINS_DIR`. |
 | CORS origins, log level/dir, DB URL, API prefix | see `.env.example` | — | Unchanged infrastructure settings. |
 
 `GET /api/v1/config` exposes the non-secret subset of the above (app name,
 wake word, default theme, default language, environment) — the same role
 `/api/v1/health` already played for just `app_name`, generalized now that
-there's more than one client-relevant setting. `app_name` and
-`default_theme` reflect any DB-backed override; the rest are still purely
-env-driven. `GET`/`PATCH /api/v1/settings` (`008_Settings`) is the
+there's more than one client-relevant setting. `app_name`, `default_theme`,
+and `wake_word` reflect any DB-backed override; `default_language` is still
+purely env-driven. `GET`/`PATCH /api/v1/settings` (`008_Settings`) is the
 dedicated read/write surface for the managed settings — see
 [03_DATABASE_DESIGN.md](03_DATABASE_DESIGN.md).
 
-The settings domain also manages a third key with no env-var counterpart at
+The settings domain also manages two keys with no env-var counterpart at
 all: `onboarding_complete` (`009_Assistant_Onboarding`), a bool defaulting
-to `false` until explicitly set — it isn't in the table above because
-there's no "env-driven default" concept for it, only the DB override.
-`GET /api/v1/config`/`GET /api/v1/health` don't expose it (only
-`GET /api/v1/settings` does); it's read purely by `AppShell`'s
-onboarding-redirect gate.
+to `false` until explicitly set, and `wake_word_enabled`
+(`011_Wake_Word`), a bool defaulting to `true` gating the wake-word
+runtime's always-on listening (read once at startup, not hot-reloaded —
+see `docs/features/011_Wake_Word.md`). Neither is in the table above
+because there's no "env-driven default" concept for either, only the DB
+override. `GET /api/v1/config`/`GET /api/v1/health` don't expose either
+(only `GET /api/v1/settings` does); `onboarding_complete` is read purely by
+`AppShell`'s onboarding-redirect gate.
 
 ## Known gaps (intentional, tracked for later features)
 

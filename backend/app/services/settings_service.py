@@ -25,10 +25,21 @@ class SettingsService:
         onboarding_override = overrides.get(SettingKey.ONBOARDING_COMPLETE)
         onboarding_complete = onboarding_override == "true"
 
+        # No DB override of its own: an operator-pinned WAKE_WORD env var
+        # wins if set, otherwise it's derived from the (possibly
+        # DB-overridden) app_name — see docs/features/011_Wake_Word.md.
+        wake_word = defaults.wake_word or f"Hey {app_name}"
+        wake_word_enabled_override = overrides.get(SettingKey.WAKE_WORD_ENABLED)
+        wake_word_enabled = (
+            wake_word_enabled_override == "true" if wake_word_enabled_override is not None else True
+        )
+
         return EffectiveSettings(
             app_name=app_name,
             default_theme=default_theme,
             onboarding_complete=onboarding_complete,
+            wake_word=wake_word,
+            wake_word_enabled=wake_word_enabled,
         )
 
     def update_app_name(self, value: str) -> None:
@@ -40,3 +51,6 @@ class SettingsService:
 
     def update_onboarding_complete(self, value: bool) -> None:
         self._repository.set(SettingKey.ONBOARDING_COMPLETE, "true" if value else "false")
+
+    def update_wake_word_enabled(self, value: bool) -> None:
+        self._repository.set(SettingKey.WAKE_WORD_ENABLED, "true" if value else "false")

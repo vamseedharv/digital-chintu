@@ -17,11 +17,20 @@ services:
       LOG_DIR: /app/logs
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173}
       DATABASE_URL: sqlite:////app/data/chintu.db
-      WAKE_WORD: ${WAKE_WORD:-Hey Chintu}
       DEFAULT_THEME: ${DEFAULT_THEME:-system}
       DEFAULT_LANGUAGE: ${DEFAULT_LANGUAGE:-en-US}
       PLUGINS_DIR: /app/plugins
       ENABLED_PLUGINS: ${ENABLED_PLUGINS:-}
+      # WAKE_WORD deliberately isn't listed here: it's optional (see
+      # backend/app/core/config.py) and Compose can't distinguish "unset" from
+      # "set to empty string" once a key is listed under `environment:` — an
+      # operator who wants to pin an exact phrase in Docker should add
+      # `WAKE_WORD: ${WAKE_WORD}` via a docker-compose.override.yml. Left
+      # unset, it derives "Hey {APP_NAME}", same as native dev.
+      WAKE_WORD_MODEL: ${WAKE_WORD_MODEL:-hey_jarvis}
+      WAKE_WORD_SENSITIVITY: ${WAKE_WORD_SENSITIVITY:-0.5}
+      WAKE_WORD_PREROLL_SECONDS: ${WAKE_WORD_PREROLL_SECONDS:-1.0}
+      VOICE_AUDIO_DEVICE: ${VOICE_AUDIO_DEVICE:-}
     volumes:
       - backend-data:/app/data
       - backend-logs:/app/logs

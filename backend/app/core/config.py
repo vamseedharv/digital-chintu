@@ -4,7 +4,7 @@ import re
 from enum import StrEnum
 from functools import lru_cache
 
-from pydantic import ValidationInfo, field_validator, model_validator
+from pydantic import Field, ValidationInfo, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from app.core.validation import validate_short_text
@@ -53,9 +53,27 @@ class Settings(BaseSettings):
     # display/spoken name (CLAUDE.md: "never hardcoded"); the rest are
     # env-driven defaults a future onboarding/settings feature can read —
     # this layer doesn't persist per-user overrides, see docs/features/008_Settings.md.
-    wake_word: str = "Hey Chintu"
+    #
+    # `wake_word` is `None` unless an operator pins an exact phrase via
+    # WAKE_WORD — the *effective* phrase (what /api/v1/config and
+    # /api/v1/settings actually report) defaults to "Hey {app_name}" instead,
+    # computed in app/services/settings_service.py so it tracks a DB-overridden
+    # app_name too. See docs/features/011_Wake_Word.md for why the phrase text
+    # is decoupled from which acoustic model is listening.
+    wake_word: str | None = None
     default_theme: Theme = Theme.SYSTEM
     default_language: str = "en-US"
+
+    # Wake-word detection (docs/features/011_Wake_Word.md). All env-only,
+    # deployment-level knobs — not managed by 008_Settings, same tier as
+    # plugins_dir. Detection itself is an opt-in extra (`pip install
+    # '.[voice]'`); these fields are harmless to set even when that extra
+    # isn't installed.
+    wake_word_model: str = "hey_jarvis"
+    wake_word_sensitivity: float = Field(default=0.5, ge=0.0, le=1.0)
+    wake_word_preroll_seconds: float = Field(default=1.0, ge=0.0, le=10.0)
+    # Empty string means "use the system's default audio input device."
+    voice_audio_device: str = ""
 
     # Plugin extension point (docs/architecture/05_PLUGIN_SDK.md). Relative
     # paths resolve against the process's working directory, same as log_dir
@@ -69,10 +87,15 @@ class Settings(BaseSettings):
     # access. See 05_PLUGIN_SDK.md's "Enabling / disabling".
     enabled_plugins: str = ""
 
-    @field_validator("app_name", "wake_word")
+    @field_validator("app_name", "wake_word_model")
     @classmethod
     def _not_blank(cls, value: str, info: ValidationInfo) -> str:
         return validate_short_text(value, info.field_name or "value")
+
+    @field_validator("wake_word")
+    @classmethod
+    def _wake_word_not_blank_when_set(cls, value: str | None) -> str | None:
+        return validate_short_text(value, "wake_word") if value is not None else None
 
     @field_validator("default_language")
     @classmethod

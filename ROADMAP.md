@@ -40,14 +40,21 @@ and [docs/architecture/05_PLUGIN_SDK.md](docs/architecture/05_PLUGIN_SDK.md).
 No real plugin exists yet; that's Phase 8 (`041_Home_Assistant`,
 `042_Device_Control`).
 
-## Phase 2 — Voice Pipeline
+## Phase 2 — Voice Pipeline — 🔄 In progress
 
-`011_Wake_Word`, `012_Speech_To_Text`, `013_Text_To_Speech`,
-`014_Conversation_UI`, `031_Voice_Settings`, `032_Multilingual`. Depends on
-OpenWakeWord / Whisper.cpp / Piper (per
-[docs/Foundation/04_Tech_Stack.md](docs/Foundation/04_Tech_Stack.md)) — none
-of these are integrated yet. Raspberry Pi resource constraints (CPU/RAM for
-on-device STT/TTS) should be validated early in this phase, not assumed.
+`011_Wake_Word` (✅ Done — see
+[docs/features/011_Wake_Word.md](docs/features/011_Wake_Word.md)),
+`012_Speech_To_Text`, `013_Text_To_Speech`, `014_Conversation_UI`,
+`031_Voice_Settings`, `032_Multilingual`. Depends on OpenWakeWord / Whisper.cpp
+/ Piper (per [docs/Foundation/04_Tech_Stack.md](docs/Foundation/04_Tech_Stack.md)).
+`011` validated Raspberry Pi resource constraints early, as intended —
+published/community numbers only (no physical Pi was available), documented
+in [docs/architecture/07_DEPLOYMENT.md](docs/architecture/07_DEPLOYMENT.md)'s
+"Voice / Wake Word" section — and shipped OpenWakeWord as an **opt-in**
+dependency precisely because of that uncertainty, with a push-to-talk
+fallback always available regardless of hardware. `012`-`014`/`031`/`032`
+haven't started; the same resource-validate-before-assuming approach should
+apply to Whisper.cpp/Piper when they do.
 
 ## Phase 3 — AI & Context
 

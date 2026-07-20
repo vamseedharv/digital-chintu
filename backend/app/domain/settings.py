@@ -19,6 +19,7 @@ class SettingKey(StrEnum):
     APP_NAME = "app_name"
     DEFAULT_THEME = "default_theme"
     ONBOARDING_COMPLETE = "onboarding_complete"
+    WAKE_WORD_ENABLED = "wake_word_enabled"
 
 
 @dataclass(frozen=True)
@@ -26,8 +27,14 @@ class EffectiveSettings:
     """The resolved value of every managed setting. `app_name`/`default_theme`
     fall back to the env-driven default from `app.core.config.Settings` when
     no override exists; `onboarding_complete` has no env-driven concept — it
-    defaults to `False` (never onboarded) until explicitly set `True`."""
+    defaults to `False` (never onboarded) until explicitly set `True`.
+    `wake_word` has no override of its own — it's derived from `app_name`
+    (or the `WAKE_WORD` env pin, if set) by `SettingsService`, not persisted;
+    `wake_word_enabled` defaults to `True` and is the on/off toggle for
+    always-on listening (see docs/features/011_Wake_Word.md)."""
 
     app_name: str
     default_theme: Theme
     onboarding_complete: bool
+    wake_word: str
+    wake_word_enabled: bool

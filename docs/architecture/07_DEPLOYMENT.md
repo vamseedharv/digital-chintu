@@ -76,6 +76,60 @@ static file server. Set `DEBUG=false` and `APP_ENV=production` in
 matters if you're relying on a `.env` file at all; see
 [06_SECURITY.md](06_SECURITY.md).
 
+## Voice / Wake Word
+
+`011_Wake_Word` (`backend/app/core/voice/`) integrates
+[OpenWakeWord](https://github.com/dscripka/openWakeWord) as an **opt-in**
+capability — `pip install '.[voice]'` (`openwakeword`, `onnxruntime`,
+`sounddevice`, `numpy`; see `backend/pyproject.toml`), never installed by
+default or in CI. Without it, the backend still boots and serves
+everything else; `GET /api/v1/wake-word/status` reports why detection is
+inactive, and `POST /api/v1/wake-word/trigger` (push-to-talk) always works
+regardless.
+
+**Resource footprint** — published/community numbers, not benchmarked on
+real hardware by this feature (no physical device was available; see
+Sources below):
+
+| Device | Guidance |
+|---|---|
+| Raspberry Pi 3B+ | Practical minimum. One Pi 3 core can run 15-20 openWakeWord models simultaneously in real time. |
+| Raspberry Pi 4/5 | Recommended — an 80ms audio chunk processes in under 5ms, leaving headroom for the rest of the assistant. |
+| Raspberry Pi Zero 2W | Reported issues maxing a CPU core running `openwakeword` (see linked GitHub issues) — install the `voice` extra here only after testing on your actual unit, and use `WAKE_WORD_ENABLED=false` (via `PATCH /api/v1/settings`) or skip the extra entirely if it doesn't keep up. |
+| RAM | Roughly 50-100MB including the Python process. |
+
+**Model files aren't bundled** in the pip package — `openwakeword`
+downloads them from GitHub releases on first real startup
+(`openwakeword.utils.download_models()`, cached under
+`~/.openwakeword/models`). The first startup with detection enabled needs
+network access once; a fully air-gapped deployment needs to pre-stage the
+model files manually.
+
+**Docker**: the default image does **not** install the `voice` extra or
+`libportaudio2`, and `docker-compose.yml` doesn't bind-mount `/dev/snd` —
+real microphone capture from inside a container needs a Linux host with
+`/dev/snd` passed through and PortAudio installed in a custom image, and
+does **not** work through Docker Desktop on Windows/Mac at all (no host
+mic passthrough). For always-on listening, run the backend natively on the
+Pi/Linux box rather than in Docker; push-to-talk via the API is the
+portable fallback everywhere, including Docker.
+
+**Wake phrase vs. acoustic model**: OpenWakeWord ships six pretrained
+models (`alexa`, `hey_mycroft`, `hey_jarvis`, `hey_rhasspy`, plus two
+command phrases) — none matches an arbitrary assistant name. `WAKE_WORD_MODEL`
+picks which model actually listens; the *displayed/spoken* phrase
+(`GET /api/v1/config`'s `wake_word`, derived from the assistant name) is
+cosmetic until real custom-wake-word training exists. See
+[docs/features/011_Wake_Word.md](../features/011_Wake_Word.md) for the
+full design rationale.
+
+### Sources
+
+- [dscripka/openWakeWord (GitHub)](https://github.com/dscripka/openWakeWord)
+- [Wake Word Detection on Raspberry Pi — Outspoken](https://outspoken.cloud/blog/raspberry-pi-wake-word-detection)
+- [rhasspy/wyoming-openwakeword#47](https://github.com/rhasspy/wyoming-openwakeword/issues/47), [#30](https://github.com/rhasspy/wyoming-openwakeword/issues/30)
+- [Installation and Setup — DeepWiki](https://deepwiki.com/dscripka/openWakeWord/2-installation-and-setup)
+
 ## Not yet implemented
 
 - No CI/CD pipeline publishes images or deploys anywhere — `.github/workflows/ci.yml`
