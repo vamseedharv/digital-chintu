@@ -44,7 +44,7 @@ it (no compiled/CI-enforced boundary yet — see "Known gaps" below):
 | Cross-cutting | `core/` | `config.py` (pydantic-settings, env-driven), `logging.py` (console + rotating file handler), `scheduler.py` (APScheduler instance, started/stopped via the app's lifespan, no jobs registered yet), `plugins.py` (discovery, `Plugin` contract, dynamic router registration — see [05_PLUGIN_SDK.md](05_PLUGIN_SDK.md)), `validation.py` (small validators shared across Pydantic models) |
 | Application logic | `services/` | `settings_service.py` — resolves each managed setting's effective value (DB override or env default) and validates new values (`008_Settings`) |
 | Data access | `repositories/` | `settings_repository.py` — plain key/value reads and writes against the `settings` table |
-| Domain | `domain/` | `settings.py` — `SettingKey`, `EffectiveSettings` |
+| Domain | `domain/` | `settings.py` — `SettingKey` (`app_name`, `default_theme`, `onboarding_complete`), `EffectiveSettings` |
 | Infrastructure | `db/` | `base.py` (SQLAlchemy `DeclarativeBase`), `session.py` (engine/session factory, `get_db()` FastAPI dependency), `models.py` (`SettingModel`) |
 
 The app factory (`app/main.py`) wires config, logging, CORS middleware, the
@@ -75,11 +75,21 @@ manager) together, and is the single entrypoint (`uvicorn app.main:app`).
   `navigation.ts` (nav item list, consumed by `NavLinks`).
 - `routes/` — page components rendered by the router: `DashboardPage` (the
   widget-hosting home screen — see [09_UI_DESIGN_SYSTEM.md](09_UI_DESIGN_SYSTEM.md)),
-  `NotFoundPage` (404), `ErrorPage` (route-level error boundary).
+  `SettingsPage`, `OnboardingPage` (`009_Assistant_Onboarding` — a full-screen
+  wizard, a sibling of `AppShell` in the route tree rather than one of its
+  children, so it renders without sidebar/nav chrome), `NotFoundPage` (404),
+  `ErrorPage` (route-level error boundary).
 - `main.tsx` — mounts `RouterProvider` wrapped in `ThemeProvider` and
   `<MotionConfig reducedMotion="user">`; the header name and document title
   are driven by the backend's `app_name` (fetched via `useHealth` inside
   `AppShell`), not hardcoded.
+
+`AppShell` also gates every route it wraps: it fetches settings
+(`useSettings`) and redirects to `/onboarding` whenever `onboarding_complete`
+is `false`, once that fetch actually resolves (never mid-loading, never on a
+fetch error — see `app/AppShell.tsx`). `/onboarding` itself is never gated,
+so it stays reachable after completion too (a "Run setup again" link on the
+Settings page points there) — not a one-time irreversible flow.
 
 The frontend's own import direction (`app`/`routes` → `components/layout` →
 `components/ui` → `api`/`theme`) is enforced the same way the backend's is —
@@ -124,8 +134,16 @@ wake word, default theme, default language, environment) — the same role
 there's more than one client-relevant setting. `app_name` and
 `default_theme` reflect any DB-backed override; the rest are still purely
 env-driven. `GET`/`PATCH /api/v1/settings` (`008_Settings`) is the
-dedicated read/write surface for the two managed settings — see
+dedicated read/write surface for the managed settings — see
 [03_DATABASE_DESIGN.md](03_DATABASE_DESIGN.md).
+
+The settings domain also manages a third key with no env-var counterpart at
+all: `onboarding_complete` (`009_Assistant_Onboarding`), a bool defaulting
+to `false` until explicitly set — it isn't in the table above because
+there's no "env-driven default" concept for it, only the DB override.
+`GET /api/v1/config`/`GET /api/v1/health` don't expose it (only
+`GET /api/v1/settings` does); it's read purely by `AppShell`'s
+onboarding-redirect gate.
 
 ## Known gaps (intentional, tracked for later features)
 

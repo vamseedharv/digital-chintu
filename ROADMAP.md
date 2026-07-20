@@ -13,19 +13,23 @@ short-horizon items instead.
 per-doc (see each file's own Status note). Frozen after two review passes
 (UI-specific, then full architecture) with every approved, non-feature
 finding fixed — see [CHANGELOG.md](CHANGELOG.md)'s `[0.2.0]` entry and
-[REPO_HEALTH_REPORT.md](REPO_HEALTH_REPORT.md):
+[REPO_HEALTH_REPORT.md](REPO_HEALTH_REPORT.md). **Confirmed closed as of
+`009`'s completion**: every feature below is ✅ Done except `004`, whose two
+narrow remaining items are now tracked in [BACKLOG.md](BACKLOG.md) and have
+not blocked anything built since (007, 008, 009, or Phase 1's `010`) — they
+don't gate Phase 2:
 
 | Feature | Status |
 |---|---|
 | 001 Project Setup | ✅ Done |
 | 002 Docker | ✅ Done (delivered under 001) |
 | 003 CI/CD | ✅ Done (delivered under 001; CD itself still open) |
-| 004 Backend Core | ⚠️ Mostly done (error-response format, request middleware still open) |
+| 004 Backend Core | ⚠️ Mostly done (error-response format, request middleware still open — tracked in BACKLOG.md, not blocking) |
 | 005 Frontend Framework | ✅ Done (application shell, routing, component library) |
 | 006 Theme Engine | ✅ Core done (custom spacing scale and broader component library deferred to real UI features that need them) |
 | 007 Dashboard | ✅ Done (added after the freeze — widget-hosting home screen, see docs/features/007_Dashboard.md) |
 | 008 Settings | ✅ Done (added after the freeze — DB-backed app_name/default_theme overrides, first DB model + Alembic, see docs/features/008_Settings.md) |
-| 009 Assistant Onboarding | ❌ Not started (name is configurable, but no onboarding flow) |
+| 009 Assistant Onboarding | ✅ Done (added after the freeze — first-run wizard, gated by a third Settings key (`onboarding_complete`), see docs/features/009_Assistant_Onboarding.md) |
 
 ## Phase 1 — Plugin Framework — ✅ Done
 

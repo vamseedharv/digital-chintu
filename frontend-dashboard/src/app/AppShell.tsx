@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
-import { Outlet } from 'react-router'
+import { Outlet, useNavigate } from 'react-router'
 import { Menu } from 'lucide-react'
 import { useHealth } from '../api/useHealth'
 import type { HealthState } from '../api/useHealth'
+import { useSettings } from '../api/useSettings'
 import { ThemeToggle } from '../components/ThemeToggle'
 import { Sidebar } from '../components/layout/Sidebar'
 import { MobileNav } from '../components/layout/MobileNav'
@@ -17,12 +18,26 @@ export interface AppShellContext {
 
 export function AppShell() {
   const health = useHealth()
+  const { state: settingsState } = useSettings()
   const appName = health.kind === 'success' ? health.data.app_name : DEFAULT_APP_NAME
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
+  const navigate = useNavigate()
 
   useEffect(() => {
     document.title = appName
   }, [appName])
+
+  useEffect(() => {
+    // AppShell only ever renders for routes other than /onboarding (see
+    // router.tsx — onboarding is a sibling route, not a child of this
+    // layout), so any incomplete-onboarding user reaching any of them
+    // should be sent there. Only acts once the fetch actually resolves —
+    // never redirects while loading (avoids a flash) or on a fetch error
+    // (can't know onboarding status, so don't guess).
+    if (settingsState.kind === 'success' && !settingsState.data.onboarding_complete) {
+      navigate('/onboarding', { replace: true })
+    }
+  }, [settingsState, navigate])
 
   return (
     <div className="min-h-screen md:flex">

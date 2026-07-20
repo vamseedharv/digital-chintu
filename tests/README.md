@@ -32,12 +32,20 @@ if they are (set outside of CI). No need to start them manually first.
 ## Scope
 
 This is a smoke suite (dashboard loads with its widget grid, backend health
-status renders, settings can be changed and persist, theme toggle works) —
-not wired into the default CI gate in `.github/workflows/ci.yml`, to keep
-CI fast. Run it locally, or add a dedicated CI job once there's enough UI
-surface to justify the extra runtime.
+status renders, settings can be changed and persist, onboarding walks a
+first-run user through setup, theme toggle works) — not wired into the
+default CI gate in `.github/workflows/ci.yml`, to keep CI fast. Run it
+locally, or add a dedicated CI job once there's enough UI surface to justify
+the extra runtime.
 
-The settings test drives the real dev database (not a sandboxed one, unlike
-the backend/frontend unit and integration suites) and restores the
-assistant name it changes afterward, so re-running the suite doesn't leave
-a permanent side effect on your local `backend/data/chintu.db`.
+The settings and onboarding tests drive the real dev database (not a
+sandboxed one, unlike the backend/frontend unit and integration suites) and
+restore whatever they changed afterward, so re-running the suite doesn't
+leave a permanent side effect on your local `backend/data/chintu.db`.
+`global-setup.ts` also forces `onboarding_complete: true` once before the
+suite runs, so a never-configured DB doesn't send every other test into the
+onboarding wizard instead of the page it expects — and the whole spec file
+runs serially (`test.describe.configure({ mode: 'serial' })`) so the
+onboarding test's temporary flip to `false` can't race with any other
+test's page load. See `docs/architecture/08_TESTING_STRATEGY.md`'s "E2E"
+section for the full reasoning.

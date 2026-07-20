@@ -5,11 +5,13 @@ export type ThemePreference = 'light' | 'dark' | 'system'
 export interface SettingsResponse {
   app_name: string
   default_theme: ThemePreference
+  onboarding_complete: boolean
 }
 
 export interface SettingsUpdate {
   app_name?: string
   default_theme?: ThemePreference
+  onboarding_complete?: boolean
 }
 
 export function fetchSettings(): Promise<SettingsResponse> {

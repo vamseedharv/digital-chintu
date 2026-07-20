@@ -137,6 +137,50 @@ fresh browser's initial theme yet; tracked in `BACKLOG.md`. See
 `docs/features/008_Settings.md` for what else is deliberately out of scope
 (`wake_word`/`default_language`, per-user overrides, live cross-tab sync).
 
+- Assistant Onboarding (`009_Assistant_Onboarding`): a first-run wizard
+  (`/onboarding`, `routes/OnboardingPage.tsx`) walks a new user through
+  naming the assistant and choosing a theme, both persisted through the
+  existing `GET`/`PATCH /api/v1/settings` — no separate storage mechanism.
+  Gated by a third managed setting, `onboarding_complete` (bool, defaults
+  `false`), which needed **zero database migration** to add — just a new
+  row in `008_Settings`'s existing generic key/value table, the
+  extensibility it was designed for. **Not a one-time irreversible gate**:
+  `/onboarding` is always a real, navigable route; a "Run setup again" link
+  on the Settings page returns to it; `onboarding_complete` can be flipped
+  back to `false` like any other setting. This closes Phase 0 — see
+  `ROADMAP.md`'s Phase 0 table (`004_Backend_Core`'s two narrow remaining
+  gaps are now tracked in `BACKLOG.md`, confirmed not blocking).
+- `AppShell` now also fetches settings (`useSettings`) and redirects any
+  route it wraps to `/onboarding` whenever `onboarding_complete` is
+  `false`, once that fetch resolves (never mid-loading, never on a fetch
+  error). `/onboarding` itself is a sibling of `AppShell` in the route
+  tree, not one of its children, so it renders full-screen without
+  sidebar/nav chrome and is never itself gated.
+- Backend: `SettingKey.ONBOARDING_COMPLETE` (`domain/settings.py`),
+  `SettingsService.update_onboarding_complete()`, and the corresponding
+  field on `SettingsResponse`/`SettingsUpdate` — the only backend change
+  this feature needed, exactly matching "backend support only if
+  onboarding needs state beyond what Settings already persists."
+- Backend tests: `onboarding_complete` cases added to
+  `test_settings_service.py` and `test_settings_api.py` (default `false`,
+  round-trips, can be flipped back, skip doesn't touch `app_name`/
+  `default_theme`).
+- Frontend tests: `OnboardingPage.test.tsx` (prefill from real current
+  settings — never a hardcoded default —, get-started and skip both
+  navigate to the dashboard, error states). `App.test.tsx`'s `fetch` mock
+  became URL-aware (`/health` vs `/settings`) since `AppShell` now calls
+  both; gained redirect-gate tests. `SettingsPage.test.tsx` gained a
+  "Run setup again" link test and now needs a `MemoryRouter` wrapper.
+- E2E: an onboarding happy-path test (redirect while incomplete, prefill,
+  complete, land on dashboard with the new name visible, re-run via
+  Settings), restoring original state afterward like the settings test.
+  Needed `tests/global-setup.ts` (forces `onboarding_complete: true` once
+  before the suite, since a never-configured DB defaults it `false` and
+  would otherwise send every other test to the onboarding wizard) and
+  `test.describe.configure({ mode: 'serial' })` in `smoke.spec.ts` (the
+  onboarding test's temporary flip to `false` would otherwise race with
+  other tests' page loads under `fullyParallel`).
+
 ## [0.2.0] - 2026-07-09
 
 **Foundation frozen.** UI Framework built, then reviewed twice (a UI-specific

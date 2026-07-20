@@ -20,6 +20,7 @@ def test_effective_settings_fall_back_to_env_defaults_when_nothing_is_overridden
 
     assert effective.app_name == defaults.app_name
     assert effective.default_theme == defaults.default_theme
+    assert effective.onboarding_complete is False
 
 
 def test_update_app_name_is_reflected_in_effective_settings(db_session: Session) -> None:
@@ -69,3 +70,22 @@ def test_only_the_updated_setting_changes(db_session: Session) -> None:
     effective = service.get_effective_settings()
     assert effective.app_name == "Jarvis"
     assert effective.default_theme == defaults.default_theme
+
+
+def test_update_onboarding_complete_is_reflected_in_effective_settings(
+    db_session: Session,
+) -> None:
+    service = _service(db_session)
+
+    service.update_onboarding_complete(True)
+
+    assert service.get_effective_settings().onboarding_complete is True
+
+
+def test_onboarding_complete_can_be_flipped_back_to_false(db_session: Session) -> None:
+    service = _service(db_session)
+    service.update_onboarding_complete(True)
+
+    service.update_onboarding_complete(False)
+
+    assert service.get_effective_settings().onboarding_complete is False

@@ -18,12 +18,16 @@ class SettingKey(StrEnum):
 
     APP_NAME = "app_name"
     DEFAULT_THEME = "default_theme"
+    ONBOARDING_COMPLETE = "onboarding_complete"
 
 
 @dataclass(frozen=True)
 class EffectiveSettings:
-    """The resolved value of every managed setting: a DB override if one
-    exists, otherwise the env-driven default from app.core.config.Settings."""
+    """The resolved value of every managed setting. `app_name`/`default_theme`
+    fall back to the env-driven default from `app.core.config.Settings` when
+    no override exists; `onboarding_complete` has no env-driven concept — it
+    defaults to `False` (never onboarded) until explicitly set `True`."""
 
     app_name: str
     default_theme: Theme
+    onboarding_complete: bool

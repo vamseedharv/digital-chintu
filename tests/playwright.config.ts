@@ -21,6 +21,9 @@ export default defineConfig({
   testDir: './e2e',
   fullyParallel: true,
   reporter: 'list',
+  // Ensures onboarding_complete=true before any test runs — see
+  // global-setup.ts for why.
+  globalSetup: './global-setup.ts',
   use: {
     baseURL: FRONTEND_URL,
   },

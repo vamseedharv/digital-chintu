@@ -1,13 +1,24 @@
 # 009 Assistant Onboarding
 
-## Status: Not started
+## Status: Done
 
-The assistant's name (`APP_NAME`) is runtime-configurable via environment
-variable end-to-end (backend config → `/api/v1/health` and `/api/v1/config`
-→ frontend header, verified with tests), validated non-blank at the config
-layer — but there is no onboarding *flow* for a user to set it (or the wake
-word, default theme, or default language, all now equally
-config-layer-configurable) through the UI. Fully open.
+A first-run flow (`GET`/visit `/onboarding`) walks a new user through naming
+the assistant and choosing a theme, both persisted through `008_Settings`'s
+existing `GET`/`PATCH /api/v1/settings` — no separate storage mechanism. A
+third managed setting, `onboarding_complete` (bool, defaults `false`), gates
+it: `AppShell` redirects any route to `/onboarding` while it's `false`, and
+completing or skipping the wizard sets it `true`. Adding this key needed
+**zero database migration** — it's just a new row in the existing generic
+key/value `settings` table, exactly validating the extensibility
+`008_Settings` was designed for (see
+[docs/architecture/03_DATABASE_DESIGN.md](../architecture/03_DATABASE_DESIGN.md)).
+
+**Not a one-time irreversible gate**: `/onboarding` is a real, always
+navigable route (a "Run setup again" link lives on the Settings page), and
+`onboarding_complete` can be flipped back to `false` like any other setting
+— there's no special-cased "only once" logic anywhere.
+
+This closes Phase 0 — see [ROADMAP.md](../../ROADMAP.md)'s Phase 0 table.
 
 ## Objective
 Implement the feature in a production-ready manner.

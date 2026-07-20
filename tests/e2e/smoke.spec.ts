@@ -1,5 +1,16 @@
 import { expect, test } from '@playwright/test'
 
+const BACKEND_URL = process.env.PLAYWRIGHT_BACKEND_URL ?? 'http://localhost:8000'
+
+// This suite drives one real, shared backend (not sandboxed per test like
+// the unit/integration suites) — the onboarding test below temporarily
+// flips a global setting (onboarding_complete) that every other test's
+// page loads depend on. `fullyParallel` (playwright.config.ts) would let
+// that overlap with concurrent tests hitting `/`/`/settings` and see the
+// onboarding wizard instead of the page they expected. Serial execution
+// for this one file removes the race entirely.
+test.describe.configure({ mode: 'serial' })
+
 test('dashboard loads and shows backend health status using the configured app name', async ({
   page,
 }) => {
@@ -51,6 +62,57 @@ test('settings page updates the assistant name and it persists on reload', async
   await page.getByLabel('Assistant name').fill(originalName)
   await page.getByRole('button', { name: 'Save' }).click()
   await expect(page.getByText('Saved.')).toBeVisible()
+})
+
+test('onboarding walks a first-run user through naming the assistant and choosing a theme', async ({
+  page,
+  request,
+}) => {
+  const before = await request.get(`${BACKEND_URL}/api/v1/settings`)
+  const original = (await before.json()) as { app_name: string; default_theme: string }
+
+  await request.patch(`${BACKEND_URL}/api/v1/settings`, {
+    data: { onboarding_complete: false },
+  })
+
+  try {
+    // A fresh visit to any route redirects to /onboarding while incomplete.
+    await page.goto('/')
+    await expect(page).toHaveURL(/\/onboarding$/)
+    await expect(page.getByRole('heading', { level: 1, name: 'Welcome' })).toBeVisible()
+
+    // Prefilled from the real current settings, never a hardcoded default.
+    const nameInput = page.getByLabel('What should we call your assistant?')
+    await expect(nameInput).toHaveValue(original.app_name)
+
+    await nameInput.fill('E2E Onboarded Assistant')
+    await page.getByLabel('Theme').selectOption('dark')
+    await page.getByRole('button', { name: 'Get started' }).click()
+
+    // Completing onboarding lands on the dashboard, and the new name is
+    // visible immediately (round-tripped through Settings, not just saved).
+    await expect(page).toHaveURL('/')
+    await expect(page.getByTestId('app-name')).toHaveText('E2E Onboarded Assistant')
+
+    // Re-runnable, not a one-time irreversible gate: visiting it again
+    // (via the Settings page's link) still works after completion.
+    await page.goto('/settings')
+    await page.getByRole('link', { name: 'Run setup again' }).click()
+    await expect(page).toHaveURL(/\/onboarding$/)
+    await expect(page.getByLabel('What should we call your assistant?')).toHaveValue(
+      'E2E Onboarded Assistant',
+    )
+  } finally {
+    // Restore original state — this test drives the real dev database, not
+    // a sandboxed one, same reasoning as the settings rename test below.
+    await request.patch(`${BACKEND_URL}/api/v1/settings`, {
+      data: {
+        app_name: original.app_name,
+        default_theme: original.default_theme,
+        onboarding_complete: true,
+      },
+    })
+  }
 })
 
 test('theme toggle switches between light and dark mode', async ({ page }) => {

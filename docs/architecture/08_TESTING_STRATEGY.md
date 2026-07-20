@@ -1,8 +1,8 @@
 # 08 Testing Strategy
 
 Status: **implemented**, extended as each feature lands (Project Setup,
-Dashboard, Plugin Framework, Settings) — same three-tier structure
-throughout, don't invent a different one per feature.
+Dashboard, Plugin Framework, Settings, Assistant Onboarding) — same
+three-tier structure throughout, don't invent a different one per feature.
 
 ## Three tiers
 
@@ -56,7 +56,7 @@ a behavioral test.
   shortcut never exercises the actual migration files.
 
 Run with coverage: `pytest --cov-report=html` → `backend/htmlcov/index.html`.
-Current coverage: **99% statements** (101 tests). No deliberate gaps left
+Current coverage: **99% statements** (108 tests). No deliberate gaps left
 unexplained: `db/base.py`'s `DeclarativeBase` is now exercised by
 `SettingModel`.
 
@@ -82,13 +82,23 @@ unexplained: `db/base.py`'s `DeclarativeBase` is now exercised by
   unmount-during-fetch-race test pattern, plus its own `saveState` machine
   for the `PATCH` action (idle/saving/success/error) — same shape, one more
   dimension.
+- `OnboardingPage.test.tsx` renders through a real `createMemoryRouter` (not
+  `MemoryRouter`) with a dummy `/` route, since it needs to assert on where
+  `useNavigate()` actually lands after a save — mirrors the pattern
+  `App.test.tsx` already used for router-dependent assertions.
+- `App.test.tsx`'s `fetch` mock became URL-aware (`/health` vs `/settings`
+  return different shapes) once `AppShell` started fetching both — see its
+  `beforeEach`. Defaults `onboarding_complete: true` so existing tests
+  exercise the normal app; a dedicated test overrides it `false` to assert
+  the redirect gate itself.
 
 Run with coverage: `npx vitest run --coverage` → `frontend-dashboard/coverage/index.html`.
-Current coverage: **98.4% statements, 96.74% branches, 100% functions, 99.4%
-lines** (103 tests). Deliberate gaps: `ThemeProvider`'s `typeof window ===
-'undefined'` SSR guard (untestable in jsdom without mocking the mock) and
-`MobileNav`'s `!first || !last` empty-focusable-list guard (defensive — the
-drawer always renders at least a close button and one nav link in practice).
+Current coverage: **98.57% statements, 97.12% branches, 100% functions,
+99.47% lines** (112 tests). Deliberate gaps: `ThemeProvider`'s `typeof
+window === 'undefined'` SSR guard (untestable in jsdom without mocking the
+mock) and `MobileNav`'s `!first || !last` empty-focusable-list guard
+(defensive — the drawer always renders at least a close button and one nav
+link in practice).
 
 ## E2E
 
@@ -109,6 +119,18 @@ Unlike the backend/frontend unit and integration suites, E2E drives the
 a real browser hitting a real server). The settings E2E test changes and
 then restores the assistant name for exactly this reason — see
 `tests/README.md`.
+
+`tests/global-setup.ts` runs once before the suite and forces
+`onboarding_complete: true` on the real backend — without it, every test
+would hit `AppShell`'s onboarding redirect instead of the page it expects,
+since a never-configured DB defaults that flag to `false`. The onboarding
+test itself needs to flip it back to `false` around its own assertions; that
+would race with every *other* test's page load under the default
+`fullyParallel: true` (two tests briefly disagreeing about whether
+onboarding is done), so `smoke.spec.ts` opts into
+`test.describe.configure({ mode: 'serial' })` for the whole file — a small
+enough suite that running one test at a time is cheap, and it removes the
+race entirely rather than accepting flakiness.
 
 Not wired into `.github/workflows/ci.yml` — kept as a local/manual suite for
 now to keep CI fast; add a dedicated CI job once there's enough UI surface to

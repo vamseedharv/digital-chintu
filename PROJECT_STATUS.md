@@ -16,34 +16,40 @@ non-feature finding fixed. Since that freeze (all still unreleased): the
 plugin extension point (`010_Plugin_Framework`); **the first real product
 screen**, the Dashboard (`007_Dashboard`) — a widget-hosting home screen
 (greeting, clock, the existing health check, placeholder tiles for
-Weather/Reminders/To-do/Shopping List); and **the first real persistence**,
+Weather/Reminders/To-do/Shopping List); **the first real persistence**,
 Settings (`008_Settings`) — `app_name`/`default_theme` are now DB-backed
 and writable at runtime via a Settings page, backed by the app's first
 SQLAlchemy model and Alembic migration (introduced ahead of the originally
-planned Phase 4 — see [BACKLOG.md](BACKLOG.md)). No reminders, voice, AI,
-or media integrations exist yet, and no real plugin has been built on top
-of the plugin extension point. Phase 1 (Plugin Framework) is done; Phase 2
-(Voice Pipeline) is next per [ROADMAP.md](ROADMAP.md).
+planned Phase 4 — see [BACKLOG.md](BACKLOG.md)); and **Assistant Onboarding**
+(`009_Assistant_Onboarding`) — a first-run wizard gated by a third Settings
+key (`onboarding_complete`), skippable and re-runnable, not a one-time gate.
+
+**Phase 0 is now fully closed** (001 through 009 all ✅ Done, save `004`'s
+two narrow, non-blocking, now-tracked gaps — see
+[ROADMAP.md](ROADMAP.md)'s Phase 0 table). No reminders, voice, AI, or media
+integrations exist yet, and no real plugin has been built on top of the
+plugin extension point. Phase 1 (Plugin Framework) is done; Phase 2 (Voice
+Pipeline) is next per [ROADMAP.md](ROADMAP.md).
 
 ## What exists today
 
 | Area | State |
 |---|---|
-| Backend | FastAPI app factory, Clean Architecture layer folders (`api/core/domain/services/repositories/db`), typed/validated env-driven config (assistant name, wake word, theme, language, dev/prod profiles — see `docs/architecture/01_SYSTEM_ARCHITECTURE.md`), structured logging, APScheduler (wired, no jobs), a plugin extension point (discovery/interface/dynamic router registration, no real plugin yet — `docs/architecture/05_PLUGIN_SDK.md`), a settings domain (DB-backed `app_name`/`default_theme` overrides — `docs/architecture/03_DATABASE_DESIGN.md`), four endpoint modules (`/api/v1/health`, `/api/v1/config`, `/api/v1/plugins`, `/api/v1/settings`) — all added since the `v0.2.0` freeze, not yet part of a tagged release |
-| Frontend | React + TypeScript + Vite + Tailwind v4 — application shell (`app/`: `AppShell`, router, nav), routed pages (`routes/`: **dashboard** (widget grid: greeting, clock, health check, placeholder tiles — `components/dashboard/`), **settings** (`SettingsPage`, `TextField`/`SelectField`), 404, error), a reusable component library (`components/ui/`, `components/layout/`), dark/light theme (persisted) |
+| Backend | FastAPI app factory, Clean Architecture layer folders (`api/core/domain/services/repositories/db`), typed/validated env-driven config (assistant name, wake word, theme, language, dev/prod profiles — see `docs/architecture/01_SYSTEM_ARCHITECTURE.md`), structured logging, APScheduler (wired, no jobs), a plugin extension point (discovery/interface/dynamic router registration, no real plugin yet — `docs/architecture/05_PLUGIN_SDK.md`), a settings domain (DB-backed `app_name`/`default_theme`/`onboarding_complete` overrides — `docs/architecture/03_DATABASE_DESIGN.md`), four endpoint modules (`/api/v1/health`, `/api/v1/config`, `/api/v1/plugins`, `/api/v1/settings`) — all added since the `v0.2.0` freeze, not yet part of a tagged release |
+| Frontend | React + TypeScript + Vite + Tailwind v4 — application shell (`app/`: `AppShell`, router, nav, onboarding-redirect gate), routed pages (`routes/`: **dashboard** (widget grid: greeting, clock, health check, placeholder tiles — `components/dashboard/`), **settings** (`SettingsPage`, `TextField`/`SelectField`), **onboarding** (`OnboardingPage` — full-screen, sibling of `AppShell`), 404, error), a reusable component library (`components/ui/`, `components/layout/`), dark/light theme (persisted) |
 | Database | SQLite via SQLAlchemy, migrated with Alembic — **`settings` table, the first real model** (`docs/architecture/03_DATABASE_DESIGN.md`) |
 | Docker | Both services containerized, multi-arch, healthchecked, resource-limited, wired via `docker-compose.yml`; backend image now runs `alembic upgrade head` before serving |
 | CI | GitHub Actions: backend (Linux+Windows), frontend (Linux) — lint, type-check, `import-linter` (backend) + `import/no-restricted-paths` (frontend), tests |
-| Tests | 101 backend (unit+integration) + 103 frontend (unit+integration) + 6 E2E — all passing, all added/grown since the `v0.2.0` freeze |
+| Tests | 108 backend (unit+integration) + 112 frontend (unit+integration) + 7 E2E — all passing, all added/grown since the `v0.2.0` freeze |
 | Docs | Architecture docs (`docs/architecture/`) and guides (`docs/guides/`) filled in for what's actually implemented; `CONTRIBUTING.md`/`DEVELOPMENT.md` now exist at the repo root |
 
 ## Test coverage
 
 | Package | Tests | Statements | Branches | Functions | Lines |
 |---|---|---|---|---|---|
-| Backend (Pytest) | 101 | 99% | — | — | — |
-| Frontend (Vitest) | 103 | 98.4% | 96.74% | 100% | 99.4% |
-| E2E (Playwright) | 6 | n/a | n/a | n/a | n/a |
+| Backend (Pytest) | 108 | 99% | — | — | — |
+| Frontend (Vitest) | 112 | 98.57% | 97.12% | 100% | 99.47% |
+| E2E (Playwright) | 7 | n/a | n/a | n/a | n/a |
 
 Remaining gaps are deliberate, not overlooked (`backend/app/db/base.py`'s
 `DeclarativeBase` is now exercised by `SettingModel` and no longer one of

@@ -5,6 +5,7 @@ import type { ThemePreference } from '../api/settings'
 import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
 import { Heading } from '../components/ui/Heading'
+import { LinkButton } from '../components/ui/LinkButton'
 import { SelectField } from '../components/ui/SelectField'
 import { Skeleton } from '../components/ui/Skeleton'
 import { Text } from '../components/ui/Text'
@@ -89,6 +90,12 @@ export function SettingsPage() {
           </form>
         )}
       </Card>
+
+      <div>
+        <LinkButton to="/onboarding" variant="ghost" size="sm">
+          Run setup again
+        </LinkButton>
+      </div>
     </div>
   )
 }

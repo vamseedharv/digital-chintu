@@ -15,11 +15,27 @@ function renderApp(initialEntries: string[] = ['/']) {
 
 describe('App', () => {
   beforeEach(() => {
+    // URL-aware: AppShell now fetches both /health (app name, connectivity)
+    // and /settings (the onboarding-complete gate). Default to onboarding
+    // already complete so existing tests exercise the normal app, not a
+    // redirect to /onboarding — a dedicated test below covers that gate.
     vi.stubGlobal(
       'fetch',
-      vi.fn().mockResolvedValue({
-        ok: true,
-        json: async () => ({ status: 'ok', app_name: 'Chintu', environment: 'test' }),
+      vi.fn().mockImplementation((url: string) => {
+        if (url.includes('/api/v1/settings')) {
+          return Promise.resolve({
+            ok: true,
+            json: async () => ({
+              app_name: 'Chintu',
+              default_theme: 'system',
+              onboarding_complete: true,
+            }),
+          })
+        }
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ status: 'ok', app_name: 'Chintu', environment: 'test' }),
+        })
       }),
     )
   })
@@ -76,6 +92,43 @@ describe('App', () => {
     await user.click(toggle)
 
     expect(toggle.textContent).not.toBe(initialLabel)
+  })
+
+  it('redirects to onboarding when it has not been completed yet', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockImplementation((url: string) => {
+        if (url.includes('/api/v1/settings')) {
+          return Promise.resolve({
+            ok: true,
+            json: async () => ({
+              app_name: 'Chintu',
+              default_theme: 'system',
+              onboarding_complete: false,
+            }),
+          })
+        }
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ status: 'ok', app_name: 'Chintu', environment: 'test' }),
+        })
+      }),
+    )
+
+    renderApp()
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { level: 1, name: 'Welcome' })).toBeInTheDocument()
+    })
+  })
+
+  it('does not redirect to onboarding once it has been completed', async () => {
+    renderApp()
+
+    await waitFor(() => {
+      expect(screen.getByText('Chintu is ready to help.')).toBeInTheDocument()
+    })
+    expect(screen.queryByRole('heading', { level: 1, name: 'Welcome' })).not.toBeInTheDocument()
   })
 
   it('shows the 404 page for an unknown route', () => {

@@ -1,7 +1,16 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { MemoryRouter } from 'react-router'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { SettingsPage } from '../../routes/SettingsPage'
+
+function renderPage() {
+  return render(
+    <MemoryRouter>
+      <SettingsPage />
+    </MemoryRouter>,
+  )
+}
 
 describe('SettingsPage', () => {
   beforeEach(() => {
@@ -9,7 +18,11 @@ describe('SettingsPage', () => {
       'fetch',
       vi.fn().mockResolvedValue({
         ok: true,
-        json: async () => ({ app_name: 'Chintu', default_theme: 'system' }),
+        json: async () => ({
+          app_name: 'Chintu',
+          default_theme: 'system',
+          onboarding_complete: true,
+        }),
       }),
     )
   })
@@ -19,13 +32,13 @@ describe('SettingsPage', () => {
   })
 
   it('shows a loading state before settings arrive', () => {
-    render(<SettingsPage />)
+    renderPage()
 
     expect(screen.getByRole('status')).toHaveTextContent(/loading settings/i)
   })
 
   it('populates the form with the fetched settings', async () => {
-    render(<SettingsPage />)
+    renderPage()
 
     await waitFor(() => {
       expect(screen.getByLabelText('Assistant name')).toHaveValue('Chintu')
@@ -36,7 +49,7 @@ describe('SettingsPage', () => {
   it('shows an error state when settings fail to load', async () => {
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('network error')))
 
-    render(<SettingsPage />)
+    renderPage()
 
     await waitFor(() => {
       expect(screen.getByRole('alert')).toHaveTextContent('Could not load settings')
@@ -57,7 +70,7 @@ describe('SettingsPage', () => {
       })
     vi.stubGlobal('fetch', fetchMock)
 
-    render(<SettingsPage />)
+    renderPage()
 
     await waitFor(() => {
       expect(screen.getByLabelText('Assistant name')).toHaveValue('Chintu')
@@ -93,7 +106,7 @@ describe('SettingsPage', () => {
       })
     vi.stubGlobal('fetch', fetchMock)
 
-    render(<SettingsPage />)
+    renderPage()
 
     await waitFor(() => {
       expect(screen.getByLabelText('Theme')).toHaveValue('system')
@@ -112,6 +125,19 @@ describe('SettingsPage', () => {
     })
   })
 
+  it('links to /onboarding so setup can be re-run', async () => {
+    renderPage()
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('Assistant name')).toHaveValue('Chintu')
+    })
+
+    expect(screen.getByRole('link', { name: 'Run setup again' })).toHaveAttribute(
+      'href',
+      '/onboarding',
+    )
+  })
+
   it('shows an error message when saving fails, without losing the typed draft', async () => {
     const user = userEvent.setup()
     const fetchMock = vi
@@ -123,7 +149,7 @@ describe('SettingsPage', () => {
       .mockRejectedValueOnce(new Error('network error'))
     vi.stubGlobal('fetch', fetchMock)
 
-    render(<SettingsPage />)
+    renderPage()
 
     await waitFor(() => {
       expect(screen.getByLabelText('Assistant name')).toHaveValue('Chintu')

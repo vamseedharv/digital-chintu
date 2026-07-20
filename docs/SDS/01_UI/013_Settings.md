@@ -7,6 +7,10 @@ feature-level Definition of Done and the architecturally significant
 decision this feature made (introducing the first DB model + Alembic ahead
 of Phase 4 — see
 [docs/architecture/03_DATABASE_DESIGN.md](../../architecture/03_DATABASE_DESIGN.md)).
+`009_Assistant_Onboarding` later added a third managed key,
+`onboarding_complete`, to this same domain — see that feature's own doc;
+this page describes the domain as it stands today (three keys), not just
+the original two.
 
 ## Purpose
 
@@ -33,7 +37,7 @@ surface for settings that don't exist yet.
 1. `GET /api/v1/settings` returns the current effective value of every
    managed setting (a DB override if one exists, otherwise the env-driven
    default).
-2. `PATCH /api/v1/settings` accepts a partial update (either or both
+2. `PATCH /api/v1/settings` accepts a partial update (any subset of
    fields); omitted fields are left unchanged, invalid values (blank/
    over-length name, unknown theme) are rejected with `422` and persist
    nothing.
@@ -70,7 +74,8 @@ surface for settings that don't exist yet.
 FastAPI, Clean Architecture, now with real content in every layer that was
 previously an empty placeholder package:
 
-- `domain/settings.py` — `SettingKey` (the two managed keys), `EffectiveSettings`.
+- `domain/settings.py` — `SettingKey` (the managed keys: `app_name`,
+  `default_theme`, `onboarding_complete`), `EffectiveSettings`.
 - `repositories/settings_repository.py` — plain key/value reads and writes.
 - `services/settings_service.py` — resolves the effective value of each
   setting (override or env default) and validates new values.
@@ -86,8 +91,8 @@ for the full schema and migration story.
 
 ## APIs
 
-`GET /api/v1/settings` → `{app_name, default_theme}`. `PATCH
-/api/v1/settings` → same shape in and out, partial. See
+`GET /api/v1/settings` → `{app_name, default_theme, onboarding_complete}`.
+`PATCH /api/v1/settings` → same shape in and out, partial. See
 [docs/architecture/04_API_GUIDELINES.md](../../architecture/04_API_GUIDELINES.md)
 for the REST conventions both endpoints follow (versioned prefix,
 `snake_case`, `response_model`).
@@ -101,8 +106,10 @@ see [docs/features/008_Settings.md](../../features/008_Settings.md)'s
 
 ## Configuration
 
-`app_name` and `default_theme` are now writable at runtime (this feature).
-`wake_word` and `default_language` remain env-only — see
+`app_name` and `default_theme` are writable at runtime (this feature);
+`onboarding_complete` (`009_Assistant_Onboarding`) too, with no env-driven
+concept of its own — it defaults to `false` until explicitly set. `wake_word`
+and `default_language` remain env-only — see
 [docs/features/008_Settings.md](../../features/008_Settings.md)'s
 "Deliberately out of scope".
 
@@ -119,8 +126,10 @@ updates, validation rejection, and the cross-endpoint consistency check
 (`/health`/`/config` reflect an override). Frontend: `App.test.tsx` gained
 a navigation test for the new `/settings` route.
 
-**E2E**: not extended for this feature (see
-[docs/features/008_Settings.md](../../features/008_Settings.md)'s Deliverables).
+**E2E**: not extended for `008_Settings` itself, but a settings round-trip
+test (`tests/e2e/smoke.spec.ts`) was added at the time and `009_Assistant_Onboarding`
+later added another for the onboarding flow — both exercise this same
+`GET`/`PATCH /api/v1/settings` surface.
 
 ## Manual QA
 

@@ -1,6 +1,6 @@
 """Read/write runtime settings — a DB-backed override layer on top of the
-env-driven defaults in app.core.config.Settings. Only `app_name` and
-`default_theme` are managed here today; see
+env-driven defaults in app.core.config.Settings. `app_name`, `default_theme`,
+and `onboarding_complete` are managed here today; see
 docs/features/008_Settings.md for what's deliberately out of scope."""
 
 from fastapi import APIRouter, Depends
@@ -9,6 +9,7 @@ from pydantic import BaseModel, field_validator
 from app.api.v1.deps import get_settings_service
 from app.core.config import Theme
 from app.core.validation import validate_short_text
+from app.domain.settings import EffectiveSettings
 from app.services.settings_service import SettingsService
 
 router = APIRouter()
@@ -17,6 +18,7 @@ router = APIRouter()
 class SettingsResponse(BaseModel):
     app_name: str
     default_theme: Theme
+    onboarding_complete: bool
 
 
 class SettingsUpdate(BaseModel):
@@ -26,6 +28,7 @@ class SettingsUpdate(BaseModel):
 
     app_name: str | None = None
     default_theme: Theme | None = None
+    onboarding_complete: bool | None = None
 
     @field_validator("app_name")
     @classmethod
@@ -33,12 +36,19 @@ class SettingsUpdate(BaseModel):
         return validate_short_text(value, "app_name") if value is not None else None
 
 
+def _to_response(effective: EffectiveSettings) -> SettingsResponse:
+    return SettingsResponse(
+        app_name=effective.app_name,
+        default_theme=effective.default_theme,
+        onboarding_complete=effective.onboarding_complete,
+    )
+
+
 @router.get("/settings", response_model=SettingsResponse)
 def get_settings_endpoint(
     service: SettingsService = Depends(get_settings_service),
 ) -> SettingsResponse:
-    effective = service.get_effective_settings()
-    return SettingsResponse(app_name=effective.app_name, default_theme=effective.default_theme)
+    return _to_response(service.get_effective_settings())
 
 
 @router.patch("/settings", response_model=SettingsResponse)
@@ -50,6 +60,7 @@ def update_settings_endpoint(
         service.update_app_name(update.app_name)
     if update.default_theme is not None:
         service.update_default_theme(update.default_theme)
+    if update.onboarding_complete is not None:
+        service.update_onboarding_complete(update.onboarding_complete)
 
-    effective = service.get_effective_settings()
-    return SettingsResponse(app_name=effective.app_name, default_theme=effective.default_theme)
+    return _to_response(service.get_effective_settings())

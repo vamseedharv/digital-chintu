@@ -22,8 +22,14 @@ class SettingsService:
         default_theme = (
             Theme(theme_override) if theme_override is not None else defaults.default_theme
         )
+        onboarding_override = overrides.get(SettingKey.ONBOARDING_COMPLETE)
+        onboarding_complete = onboarding_override == "true"
 
-        return EffectiveSettings(app_name=app_name, default_theme=default_theme)
+        return EffectiveSettings(
+            app_name=app_name,
+            default_theme=default_theme,
+            onboarding_complete=onboarding_complete,
+        )
 
     def update_app_name(self, value: str) -> None:
         validated = validate_short_text(value, "app_name")
@@ -31,3 +37,6 @@ class SettingsService:
 
     def update_default_theme(self, value: Theme) -> None:
         self._repository.set(SettingKey.DEFAULT_THEME, value.value)
+
+    def update_onboarding_complete(self, value: bool) -> None:
+        self._repository.set(SettingKey.ONBOARDING_COMPLETE, "true" if value else "false")

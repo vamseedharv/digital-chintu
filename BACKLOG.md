@@ -66,6 +66,21 @@ section; not dated commitments.
   integrations need API keys/OAuth tokens — plain `.env` won't be
   appropriate for multi-user or shared deployments.
 
+## 004 Backend Core — remaining gaps (newly tracked, not blocking)
+
+`ROADMAP.md`'s Phase 0 table has carried `004 Backend Core` as "⚠️ Mostly
+done" since the original architecture review, but neither of these two
+items was ever tracked here — fixing that now while confirming Phase 0's
+status for `009_Assistant_Onboarding`'s close-out. Neither has blocked any
+feature built since (007, 008, 009, or Phase 1's 010), so they're low
+priority, not a prerequisite for Phase 2+.
+
+- [ ] Standardized error-response format — endpoints today raise/return
+  FastAPI's defaults rather than a consistent `{error: {code, message}}`-
+  style shape.
+- [ ] Request-logging middleware — `core/logging.py` configures the logger
+  itself, but nothing logs each request/response automatically.
+
 ## Code-level cleanups (low priority, explicitly deferred already)
 
 - [ ] Backend JSON responses are `snake_case`; the frontend hand-copies them
